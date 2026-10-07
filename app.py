@@ -7,7 +7,9 @@ import pandas as pd
 from tide_engine import tide_at
 import math
 
-DATA=Path(__file__).resolve().parent/"data"
+ROOT=Path(__file__).resolve().parent
+DATA=ROOT/"data"
+if not (DATA/"national_master.csv").exists(): DATA=ROOT
 EVENTS=pd.read_csv(DATA/"national_master.csv", dtype={"source_time":str})
 REG=pd.read_csv(DATA/"station_registry.csv")
 
