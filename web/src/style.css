@@ -39,3 +39,17 @@
 .real-map .maplibregl-ctrl-attrib a{color:#b7ccd3}
 .hydro-marker{width:18px;height:18px;padding:0;border:2px solid #dffaff;border-radius:50%;background:#25bddd;box-shadow:0 0 0 5px rgba(37,189,221,.14),0 0 16px rgba(37,189,221,.65);cursor:pointer}
 .hydro-marker.active{width:24px;height:24px;background:#fff;border:5px solid #27c7e8;box-shadow:0 0 0 7px rgba(39,199,232,.18),0 0 24px rgba(39,199,232,.9)}
+
+.map-shell{position:relative}
+.map-card{position:absolute;left:12px;right:12px;bottom:26px;z-index:5;padding:13px 14px;border:1px solid rgba(93,218,242,.3);border-radius:15px;background:rgba(5,20,29,.94);backdrop-filter:blur(10px);box-shadow:0 12px 30px rgba(0,0,0,.3)}
+.map-card>small{display:block;color:#70a8b8;font-size:9px;letter-spacing:1px}
+.map-card>strong{display:block;margin:4px 0 9px;font-size:15px}
+.map-card p{margin:5px 0;font-size:11px;color:#9bb8c1}
+.map-condition{display:grid;grid-template-columns:auto auto 1fr;gap:8px;align-items:center}
+.map-condition>b{font-size:21px}
+.map-condition>span:last-child{font-size:10px;color:#9bb8c1;text-align:right}
+.map-phase{padding:4px 7px;border-radius:8px;font-size:9px;font-weight:800}
+.map-phase.flood{background:rgba(80,220,190,.13);color:#7de1c7}
+.map-phase.ebb{background:rgba(255,100,110,.13);color:#ff9a9a}
+.map-phase.slack{background:rgba(255,255,255,.12);color:#fff}
+.map-card button{margin-top:10px;width:100%;padding:9px;border-radius:10px;border:1px solid rgba(65,205,235,.3);background:rgba(35,185,220,.12);color:#dffaff;font-weight:700}
