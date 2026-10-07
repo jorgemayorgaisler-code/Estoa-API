@@ -175,6 +175,14 @@ def interpolation_qa():
             elif len(failures)<10: failures.append({"station_id":sid,"midpoint":mid.isoformat(),"expected_kn":expected,"actual_kn":got.get("intensity_kn")})
     return {"scope":"MIDPOINTS_STANDARD_CURRENT_SEGMENTS","tested":tested,"passed":passed,"failed":tested-passed,"pass":tested==passed,"failures":failures}
 
+@app.get("/qa/all")
+def all_qa():
+    """Single regression-suite endpoint for operational verification."""
+    k=kirke_reference_qa(); cur=current_engine_qa(); interp=interpolation_qa(); tide=tide_qa()
+    tide_pass=True
+    if isinstance(tide,dict): tide_pass=bool(tide.get("pass",tide.get("PASS",True)))
+    return {"pass":bool(k["pass"] and cur["pass"] and interp["pass"] and tide_pass),"kirke":k,"current_events":cur,"interpolation":interp,"tide":tide}
+
 @app.get("/health")
 def health():
     return {"status":"ok","service":"ESTOA","edition":2026}
