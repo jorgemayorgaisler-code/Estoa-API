@@ -16,3 +16,5 @@
 .time-label{display:block;margin:16px 0 7px;font-size:10px;font-weight:800;letter-spacing:1.5px;color:#79b8cd}.mapwarn{font-size:12px;color:#88aeba;border-left:2px solid #39758a;padding-left:10px;margin:8px 0 16px}
 
 .info-card{margin:12px 0;padding:16px;border:1px solid rgba(121,184,205,.18);border-radius:16px;background:rgba(255,255,255,.025)}.info-card small{display:block;font-size:10px;font-weight:800;letter-spacing:1.4px;color:#79b8cd;margin-bottom:6px}.info-card strong{display:block;font-size:16px;margin-bottom:5px}.info-card p{margin:0;color:#9db5bd;font-size:13px;line-height:1.45}.version{text-align:center;font-size:10px;letter-spacing:1.5px;color:#577984;margin:22px 0 80px}
+
+.slack-arrow{display:inline-flex;align-items:center;justify-content:center;margin-left:5px;font-size:17px;font-weight:900;line-height:1;vertical-align:-1px}
