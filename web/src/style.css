@@ -59,3 +59,16 @@
 .live-status small{margin-left:auto;font-size:9px;color:#789ba7}
 .live-status button{width:28px;height:28px;padding:0;border:1px solid rgba(100,210,230,.18);border-radius:8px;background:rgba(255,255,255,.035);color:#dffaff;font-size:16px}
 .live-dot{width:7px;height:7px;border-radius:50%;background:#72dfc3;box-shadow:0 0 8px rgba(114,223,195,.8)}
+
+.map-legend{display:flex;flex-wrap:wrap;gap:8px 12px;margin:8px 2px 2px;color:#91aeb8;font-size:9px}
+.map-legend span{display:flex;align-items:center;gap:5px}
+.lg{width:8px;height:8px;border-radius:50%;display:inline-block}
+.lg.flood,.hydro-marker.flood{background:#54d8bd}
+.lg.ebb,.hydro-marker.ebb{background:#ff6e78}
+.lg.slack,.hydro-marker.slack{background:#fff}
+.lg.unknown,.hydro-marker.unknown{background:#879aa1}
+.hydro-marker.flood{box-shadow:0 0 0 5px rgba(84,216,189,.14),0 0 16px rgba(84,216,189,.65)}
+.hydro-marker.ebb{box-shadow:0 0 0 5px rgba(255,110,120,.14),0 0 16px rgba(255,110,120,.65)}
+.hydro-marker.slack{box-shadow:0 0 0 5px rgba(255,255,255,.12),0 0 16px rgba(255,255,255,.55)}
+.hydro-marker.unknown{box-shadow:0 0 0 5px rgba(135,154,161,.1)}
+.hydro-marker.active{border-color:#dffaff;outline:3px solid #27c7e8}
