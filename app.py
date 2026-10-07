@@ -210,6 +210,9 @@ def all_qa():
         elif "PASS" in tide:
             tide_pass=tide["PASS"] is True
             tide_status="PASS" if tide_pass else "FAIL"
+        elif "result" in tide:
+            tide_pass=tide["result"] == "PASS"
+            tide_status="PASS" if tide_pass else "FAIL"
     return {"pass":bool(k["pass"] and cur["pass"] and interp["pass"] and tide_pass and tz["pass"]),
             "kirke":k,"current_events":cur,"interpolation":interp,
             "tide":{"pass":tide_pass,"status":tide_status,"report":tide},"timezones":tz}
