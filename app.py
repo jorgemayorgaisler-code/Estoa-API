@@ -179,9 +179,19 @@ def interpolation_qa():
 def all_qa():
     """Single regression-suite endpoint for operational verification."""
     k=kirke_reference_qa(); cur=current_engine_qa(); interp=interpolation_qa(); tide=tide_qa(); tz=timezone_qa()
-    tide_pass=True
-    if isinstance(tide,dict): tide_pass=bool(tide.get("pass",tide.get("PASS",True)))
-    return {"pass":bool(k["pass"] and cur["pass"] and interp["pass"] and tide_pass and tz["pass"]),"kirke":k,"current_events":cur,"interpolation":interp,"tide":tide,"timezones":tz}
+    # Fail closed: tide QA is valid only when the artifact explicitly reports PASS.
+    tide_pass=False
+    tide_status="MISSING_EXPLICIT_PASS"
+    if isinstance(tide,dict):
+        if "pass" in tide:
+            tide_pass=tide["pass"] is True
+            tide_status="PASS" if tide_pass else "FAIL"
+        elif "PASS" in tide:
+            tide_pass=tide["PASS"] is True
+            tide_status="PASS" if tide_pass else "FAIL"
+    return {"pass":bool(k["pass"] and cur["pass"] and interp["pass"] and tide_pass and tz["pass"]),
+            "kirke":k,"current_events":cur,"interpolation":interp,
+            "tide":{"pass":tide_pass,"status":tide_status,"report":tide},"timezones":tz}
 
 @app.get("/qa/moment-kirke-2026-10-07")
 def qa_moment_kirke_20261007():
