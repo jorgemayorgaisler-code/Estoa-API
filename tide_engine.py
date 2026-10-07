@@ -1,7 +1,9 @@
 
 import math, pandas as pd
 from pathlib import Path
-DATA=Path(__file__).resolve().parent/"data"
+ROOT=Path(__file__).resolve().parent
+DATA=ROOT/"data"
+if not (DATA/"pub3009_tide_events_current_stations_2026.csv").exists(): DATA=ROOT
 TIDES=pd.read_csv(DATA/"pub3009_tide_events_current_stations_2026.csv")
 TIDES["local_dt"]=pd.to_datetime(TIDES["local_datetime"])
 def direct_height(p,n,t):
