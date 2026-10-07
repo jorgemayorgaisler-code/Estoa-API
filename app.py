@@ -191,6 +191,26 @@ def qa_moment_kirke_20261007():
     tide=tide_at("CUR011",dt)
     return {"station_id":"CUR011","station":"Angostura Kirke","local_datetime":"2026-10-07T18:30:00","current":current,"tide":tide}
 
+@app.get("/qa/timezones")
+def timezone_qa():
+    """Verify civil timezone identifiers and representative 2026 offsets used by ESTOA."""
+    from zoneinfo import ZoneInfo
+    cases=[]
+    expected={"CUR001":"America/Santiago","CUR005":"America/Coyhaique","CUR008":"America/Coyhaique","CUR009":"America/Punta_Arenas","CUR011":"America/Punta_Arenas"}
+    for sid,tzid in expected.items():
+        row=REG[REG.station_id==sid].iloc[0]
+        item={"station_id":sid,"timezone_id":row.timezone_id,"expected_timezone":tzid,"timezone_ok":row.timezone_id==tzid,"dates":[]}
+        for dt in [datetime(2026,1,15,12),datetime(2026,7,15,12),datetime(2026,10,15,12)]:
+            try:
+                off=dt.replace(tzinfo=ZoneInfo(str(row.timezone_id))).utcoffset().total_seconds()/3600
+            except Exception:
+                off=None
+            exp=-3 if tzid in ("America/Coyhaique","America/Punta_Arenas") else (-4 if dt.month==7 else -3)
+            item["dates"].append({"local":dt.isoformat(),"utc_offset_hours":off,"expected":exp,"pass":off==exp})
+        item["pass"]=item["timezone_ok"] and all(x["pass"] for x in item["dates"])
+        cases.append(item)
+    return {"scope":"ESTOA_2026_CIVIL_TIMEZONE_BOUNDARIES","pass":all(x["pass"] for x in cases),"cases":cases}
+
 @app.get("/health")
 def health():
     return {"status":"ok","service":"ESTOA","edition":2026}
