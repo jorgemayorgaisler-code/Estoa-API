@@ -79,3 +79,6 @@
 
 .next article em{display:block;margin-top:2px;color:#6fd8e8;font-size:9px;font-style:normal;font-weight:800;letter-spacing:.5px}
 .next-slack{border-color:rgba(111,216,232,.3)!important;background:linear-gradient(180deg,rgba(37,189,221,.08),rgba(255,255,255,.02))}
+
+.strength{margin-top:6px;text-align:center;font-size:8px;font-weight:900;letter-spacing:1px;color:#9cb9c2}
+.strength-estoa{color:#fff}.strength-débil{color:#75dfc6}.strength-moderada{color:#76d5e8}.strength-fuerte{color:#ffc56e}.strength-muy-fuerte{color:#ff858d}
