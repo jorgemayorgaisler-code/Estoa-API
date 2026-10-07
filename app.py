@@ -157,6 +157,24 @@ def current_engine_qa():
         checks.append(ok_type and ok_intensity)
     return {"scope":"ALL_2026_PUBLISHED_CURRENT_EVENTS","stations":int(EVENTS.station_id.nunique()),"events":len(checks),"passed":sum(checks),"failed":len(checks)-sum(checks),"pass":all(checks)}
 
+@app.get("/qa/interpolation")
+def interpolation_qa():
+    """Validate continuous sine/cosine interpolation at midpoints of standard segments."""
+    tested=passed=0; failures=[]
+    for sid,g in EVENTS.groupby("station_id"):
+        g=g.sort_values("local_dt").reset_index(drop=True)
+        for i in range(len(g)-1):
+            a,b=g.iloc[i],g.iloc[i+1]
+            standard=(a.event_type=="SLACK" and b.event_type in MAX_TYPES) or (a.event_type in MAX_TYPES and b.event_type=="SLACK")
+            if not standard: continue
+            mid=a.local_dt+(b.local_dt-a.local_dt)/2
+            got=instant(sid,mid.to_pydatetime()); im=float(b.intensity_kn if a.event_type=="SLACK" else a.intensity_kn)
+            expected=round(im*math.sqrt(0.5),3); tested+=1
+            ok=got.get("intensity_kn") is not None and abs(got["intensity_kn"]-expected)<=0.001
+            if ok: passed+=1
+            elif len(failures)<10: failures.append({"station_id":sid,"midpoint":mid.isoformat(),"expected_kn":expected,"actual_kn":got.get("intensity_kn")})
+    return {"scope":"MIDPOINTS_STANDARD_CURRENT_SEGMENTS","tested":tested,"passed":passed,"failed":tested-passed,"pass":tested==passed,"failures":failures}
+
 @app.get("/health")
 def health():
     return {"status":"ok","service":"ESTOA","edition":2026}
