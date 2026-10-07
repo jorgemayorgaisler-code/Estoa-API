@@ -1,5 +1,6 @@
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime
 from pathlib import Path
@@ -19,7 +20,8 @@ ADD1=set(REG.loc[REG["timezone_rule_2026"]=="PUB3015_PAGES_35_153_ADD_1H_2026","
 EVENTS["local_dt"]=EVENTS["source_dt"]+pd.to_timedelta(EVENTS["station_id"].isin(ADD1).astype(int),unit="h")
 EVENTS=EVENTS.sort_values(["station_id","local_dt"]).reset_index(drop=True)
 
-app=FastAPI(title="Mares Chile API",version="0.1.0")
+app=FastAPI(title="ESTOA API",version="0.2.0")
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"], allow_headers=["*"])
 MAX_TYPES={"MAX_FLOOD","MAX_EBB"}
 
 def station_row(station_id):
