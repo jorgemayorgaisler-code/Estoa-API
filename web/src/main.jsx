@@ -15,7 +15,7 @@ const geo={type:'FeatureCollection',features};
 const apply=()=>{if(cancelled)return;let source=map.getSource('estoa-stations');if(source){source.setData(geo);return}
 map.addSource('estoa-stations',{type:'geojson',data:geo});
 map.addLayer({id:'estoa-station-circles',type:'circle',source:'estoa-stations',paint:{'circle-radius':['case',['==',['get','active'],1],12,9],'circle-color':['match',['get','phase'],'FLOOD','#29d4b2','EBB','#ef6775','SLACK','#f4fbff','#36bad9'],'circle-stroke-color':'#e4faff','circle-stroke-width':2}});
-map.addLayer({id:'estoa-station-labels',type:'symbol',source:'estoa-stations',layout:{'text-field':['get','speed'],'text-size':10,'text-font':['Open Sans Regular'],'text-allow-overlap':true,'text-ignore-placement':true},paint:{'text-color':'#ffffff','text-halo-color':'#06131d','text-halo-width':1}});
+// No symbol text layer: the raster-only style has no glyphs URL; circles must render independently.
 map.on('click','estoa-station-circles',onStationClick);
 map.on('mouseenter','estoa-station-circles',()=>{map.getCanvas().style.cursor='pointer'});
 map.on('mouseleave','estoa-station-circles',()=>{map.getCanvas().style.cursor=''});
