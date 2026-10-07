@@ -178,10 +178,10 @@ def interpolation_qa():
 @app.get("/qa/all")
 def all_qa():
     """Single regression-suite endpoint for operational verification."""
-    k=kirke_reference_qa(); cur=current_engine_qa(); interp=interpolation_qa(); tide=tide_qa()
+    k=kirke_reference_qa(); cur=current_engine_qa(); interp=interpolation_qa(); tide=tide_qa(); tz=timezone_qa()
     tide_pass=True
     if isinstance(tide,dict): tide_pass=bool(tide.get("pass",tide.get("PASS",True)))
-    return {"pass":bool(k["pass"] and cur["pass"] and interp["pass"] and tide_pass),"kirke":k,"current_events":cur,"interpolation":interp,"tide":tide}
+    return {"pass":bool(k["pass"] and cur["pass"] and interp["pass"] and tide_pass and tz["pass"]),"kirke":k,"current_events":cur,"interpolation":interp,"tide":tide,"timezones":tz}
 
 @app.get("/qa/moment-kirke-2026-10-07")
 def qa_moment_kirke_20261007():
