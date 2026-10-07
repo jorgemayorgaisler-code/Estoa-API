@@ -1,0 +1,23 @@
+station_id,station_name,weak_current_table,empirical_thresholds_kn,supports_slack_case_i,supports_weak_variable_case_ii,supports_lower_intensity_case_iii,weak_variable_marker,automatic_current_engine_policy,timezone_policy
+CUR001,"Canal Chacao, boca occidental",A,"0.1,0.3,0.5,0.8,1.0",True,False,False,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR002,"Canal Chacao, boca oriental",A,"0.1,0.3,0.5,0.8,1.0",True,False,False,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR003,"Canal Dalcahue, archipiélago de Chiloé",B,"0.1,0.3,0.5,0.8,1.0",True,False,False,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR004,"Boca del Guafo, golfo Corcovado",B,"0.1,0.3,0.5,0.8,1.0",True,False,False,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR005,"Isla Meninea, canal Moraleda",B,"0.1,0.3,0.5,0.8,1.0",True,False,False,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR006,"Bajo Roepke, canal Pulluche",A,"0.1,0.3,0.5,0.8,1.0",True,False,False,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR007,"Paso Quesahuén, golfo Elefantes",E,"0.1,0.3,0.5,0.8,1.0",True,False,True,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR008,"Paso De Vidts, golfo Elefantes",F,"0.1,0.3,0.5,0.8,1.0",True,False,False,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR009,"Angostura Inglesa, canal Messier",G,"0.1,0.3,0.5,0.8,1.0,1.2,1.5",True,True,True,*,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR010,"Angostura White, canal Santa María",C,"0.1,0.3,0.5,0.8,1.0",True,True,True,*,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR011,"Angostura Kirke, canal Kirke",D,"0.1,0.3,0.5,0.8,1.0",True,False,False,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR012,"Angostura Santa Cruz, canal Fitz Roy",B,"0.1,0.3,0.5,0.8,1.0",True,False,False,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR013,"Canal Jerónimo, boca Sur",A,"0.1,0.3,0.5,0.8,1.0",True,False,False,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR014,"Paso Inglés, Estrecho de Magallanes",A,"0.1,0.3,0.5,0.8,1.0",True,False,False,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR015,"Angostura Gabriel, canal Gabriel",E,"0.1,0.3,0.5,0.8,1.0",True,True,True,*,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR016,"Segunda Angostura, Estrecho de Magallanes",A,"0.1,0.3,0.5,0.8,1.0",True,False,False,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR017,"Primera Angostura, Estrecho de Magallanes",A,"0.1,0.3,0.5,0.8,1.0",True,False,False,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR018,"Bahía Posesión, Estrecho de Magallanes",B,"0.1,0.3,0.5,0.8,1.0",True,False,False,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR019,"Punta Wreck (Dungeness), Estrecho de Magallanes",B,"0.1,0.3,0.5,0.8,1.0",True,False,False,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR020,"Paso Mc Intyre, brazo noroeste del canal Beagle",B,"0.1,0.3,0.5,0.8,1.0",True,False,False,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR021,"Paso Mackinlay, canal Beagle",F,"0.1,0.3,0.5,0.8,1.0",True,True,False,*,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
+CUR022,"Angostura Murray, canal Murray",B,"0.1,0.3,0.5,0.8,1.0",True,False,False,,EVENT_SEQUENCE_AWARE,STATION_LOCAL_AUTOMATIC
