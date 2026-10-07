@@ -1,0 +1,15 @@
+{
+  "version": "v18",
+  "candidate": "RC2",
+  "backend_python_syntax": "PASS",
+  "https_enforced_in_client": true,
+  "hardcoded_localhost_in_ios": false,
+  "deployment_configs": [
+    "Dockerfile",
+    "render.yaml",
+    "Procfile",
+    "requirements.txt"
+  ],
+  "release_matrix_written": true,
+  "status": "READY_FOR_EXTERNAL_DEPLOYMENT"
+}

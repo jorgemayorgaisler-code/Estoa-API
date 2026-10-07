@@ -1,0 +1,21 @@
+{
+  "version": "v9 App Candidate",
+  "tabs_connected": {
+    "Ahora": true,
+    "Proximamente": true,
+    "Momento": true,
+    "Mapa": true,
+    "Mas": true
+  },
+  "api_endpoints_used": [
+    "/conditions/at",
+    "/forecast",
+    "/weak-windows",
+    "/stations",
+    "/capabilities"
+  ],
+  "weak_windows_ui": true,
+  "map_22_points": true,
+  "xcode_project_spec": true,
+  "remaining_major_block": "national numeric PUB3009 tide ingestion + end-to-end device QA"
+}

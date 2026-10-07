@@ -1,0 +1,9 @@
+station_id,station_name,pattern_port,capability,hw_time_rule,lw_time_rule,hw_height_rule,lw_height_rule,source_page,verification_status,notes
+CUR003,Canal Dalcahue,Puerto Montt,EVENT_TIMES_ONLY,+00:27,+00:27,MISSING,MISSING,185,VERIFIED,Row 570 lies under PUERTO PATRÓN PUERTO MONTT; blank height columns remain missing.
+CUR007,Paso Quesahuén,Bahía Orange,FULL_TIDE,-02:00,-01:58,ADD +0.62,ADD -0.35,187,VERIFIED,Row 717 continues the BAHÍA ORANGE pattern section from the preceding page until the next pattern heading.
+CUR009,Angostura Inglesa,Angostura Inglesa,FULL_TIDE,+00:00,+00:00,PATTERN,PATTERN,187,VERIFIED,Pattern port; Table I reference pages 103-106.
+CUR010,Angostura White,Puerto Natales,FULL_TIDE,-00:29,-00:39,LINEAR 0.53*x+0.23,LINEAR 0.53*x+0.23,188,VERIFIED,Parenthesized correction is a linear relation per Table II Note 2; one expression spans the height correction field and applies to the secondary-port height.
+CUR011,Angostura Kirke,Puerto Natales,FULL_TIDE,-02:05,-02:05,ADD +0.00,ADD +0.05,188,VERIFIED,Row 860 under Puerto Natales section.
+CUR016,Segunda Angostura,Puerto Montt,FULL_TIDE,-03:05,-03:05,ADD -0.73,ADD +0.12,190,VERIFIED,Row 1130 lies under PUERTO PATRÓN PUERTO MONTT; supersedes prior transformed data that used Bahía Gregorio.
+CUR018,Bahía Posesión,Punta Delgada,FULL_TIDE,-00:23,-00:56,ADD +1.21,ADD -0.01,190,VERIFIED,Row 1080 under Punta Delgada.
+CUR019,Punta Wreck,Puerto Montt,FULL_TIDE,-05:10,-05:02,MULTIPLY 1.91,MULTIPLY 2.46,189,VERIFIED,Asterisk denotes multiplicative height factor per Table II Note 1.

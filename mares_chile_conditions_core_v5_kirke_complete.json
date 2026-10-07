@@ -1,0 +1,193 @@
+{
+  "engine": "MARES_CHILE_CONDITIONS_CORE",
+  "version": "5.0",
+  "query": {
+    "place": "Angostura Kirke",
+    "local_datetime": "2026-10-04T18:30:00-03:00"
+  },
+  "current": {
+    "mode": "CALCULO_CONTINUO",
+    "intensity_kn": 4.899,
+    "state": "REFLUJO",
+    "direction_true": 290.0,
+    "trend": "DISMINUYENDO"
+  },
+  "next_current_events": [
+    {
+      "time": "2026-10-04T21:07:00",
+      "type": "SLACK",
+      "intensity_kn": 0.0,
+      "direction_true": null
+    },
+    {
+      "time": "2026-10-04T23:33:00",
+      "type": "MAX_FLOOD",
+      "intensity_kn": 1.8,
+      "direction_true": 100.0
+    },
+    {
+      "time": "2026-10-05T01:26:00",
+      "type": "SLACK",
+      "intensity_kn": 0.0,
+      "direction_true": null
+    },
+    {
+      "time": "2026-10-05T04:01:00",
+      "type": "MAX_EBB",
+      "intensity_kn": 2.7,
+      "direction_true": 290.0
+    },
+    {
+      "time": "2026-10-05T06:38:00",
+      "type": "SLACK",
+      "intensity_kn": 0.0,
+      "direction_true": null
+    },
+    {
+      "time": "2026-10-05T10:32:00",
+      "type": "MAX_FLOOD",
+      "intensity_kn": 5.9,
+      "direction_true": 100.0
+    },
+    {
+      "time": "2026-10-05T14:06:00",
+      "type": "SLACK",
+      "intensity_kn": 0.0,
+      "direction_true": null
+    },
+    {
+      "time": "2026-10-05T18:21:00",
+      "type": "MAX_EBB",
+      "intensity_kn": 5.6,
+      "direction_true": 290.0
+    }
+  ],
+  "weak_current_windows": [
+    {
+      "center_type": "SLACK",
+      "center_local": "2026-10-04T21:07:00",
+      "threshold_kn": 1.0,
+      "table": "D",
+      "case": "i",
+      "start_local": "2026-10-04T20:45:00",
+      "end_local": "2026-10-04T21:55:00",
+      "minutes_before": 22,
+      "minutes_after": 48,
+      "previous_max_kn": 5.4,
+      "following_max_kn": 1.8
+    },
+    {
+      "center_type": "SLACK",
+      "center_local": "2026-10-05T01:26:00",
+      "threshold_kn": 1.0,
+      "table": "D",
+      "case": "i",
+      "start_local": "2026-10-05T00:38:00",
+      "end_local": "2026-10-05T02:00:00",
+      "minutes_before": 48,
+      "minutes_after": 34,
+      "previous_max_kn": 1.8,
+      "following_max_kn": 2.7
+    },
+    {
+      "center_type": "SLACK",
+      "center_local": "2026-10-05T06:38:00",
+      "threshold_kn": 1.0,
+      "table": "D",
+      "case": "i",
+      "start_local": "2026-10-05T06:04:00",
+      "end_local": "2026-10-05T06:59:00",
+      "minutes_before": 34,
+      "minutes_after": 21,
+      "previous_max_kn": 2.7,
+      "following_max_kn": 5.9
+    },
+    {
+      "center_type": "SLACK",
+      "center_local": "2026-10-05T14:06:00",
+      "threshold_kn": 1.0,
+      "table": "D",
+      "case": "i",
+      "start_local": "2026-10-05T13:45:00",
+      "end_local": "2026-10-05T14:28:00",
+      "minutes_before": 21,
+      "minutes_after": 22,
+      "previous_max_kn": 5.9,
+      "following_max_kn": 5.6
+    }
+  ],
+  "tide": {
+    "height_m": 0.2803,
+    "display_height_m": 0.28,
+    "state": "VACIANTE",
+    "next_event": "LW",
+    "next_event_time": "2026-10-04T18:39:00",
+    "next_event_height_m": 0.28
+  },
+  "tide_bracket": [
+    {
+      "type": "HW",
+      "time": "2026-10-04T11:40:00",
+      "height_m": 0.52
+    },
+    {
+      "type": "LW",
+      "time": "2026-10-04T18:39:00",
+      "height_m": 0.28
+    }
+  ],
+  "source_logic": {
+    "current": "PUB3015 Table II + Table III",
+    "tide": "PUB3009 pattern-port events + secondary-port corrections + direct arbitrary-time formula",
+    "astronomy": "PUB3009 Table IV; context only, no alteration of PUB3015 current"
+  },
+  "astronomy": {
+    "query_local": "2026-10-04T18:30:00-03:00",
+    "previous_phase": {
+      "type": "LAST_QUARTER",
+      "code": "PHASE",
+      "regime": "QUADRATURE",
+      "source_utc_minus4": "2026-10-03T09:25:00",
+      "kirke_local_utc_minus3": "2026-10-03T10:25:00"
+    },
+    "next_phase": {
+      "type": "NEW_MOON",
+      "code": "PHASE",
+      "regime": "SYZYGY",
+      "source_utc_minus4": "2026-10-10T11:50:00",
+      "kirke_local_utc_minus3": "2026-10-10T12:50:00"
+    },
+    "previous_perigee": {
+      "type": "PERIGEE",
+      "code": "P",
+      "regime": null,
+      "source_utc_minus4": "2026-10-01T16:52:00",
+      "kirke_local_utc_minus3": "2026-10-01T17:52:00"
+    },
+    "previous_declination_event": {
+      "type": "DECLINATION_MAX_NORTH",
+      "code": "N",
+      "regime": null,
+      "source_utc_minus4": "2026-10-02T11:27:00",
+      "kirke_local_utc_minus3": "2026-10-02T12:27:00"
+    },
+    "next_declination_event": {
+      "type": "LUNAR_EQUATOR_CROSSING",
+      "code": "E",
+      "regime": null,
+      "source_utc_minus4": "2026-10-08T22:52:00",
+      "kirke_local_utc_minus3": "2026-10-08T23:52:00"
+    },
+    "interpretation_policy": {
+      "role": "CONTEXT_ONLY",
+      "does_not_modify_current_prediction": true,
+      "kirke_priority": [
+        "lunar_declination",
+        "syzygy_quadrature",
+        "perigee_apogee",
+        "phase"
+      ],
+      "note": "PUB3015 identifies lunar declination as a dominant feature of the Kirke current regime."
+    }
+  }
+}

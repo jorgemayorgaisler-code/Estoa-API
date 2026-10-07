@@ -1,0 +1,40 @@
+{
+  "station": "ANGOSTURA KIRKE",
+  "tide_reference": "PUERTO NATALES",
+  "query_local": "2026-10-04T18:30:00-03:00",
+  "secondary_port": {
+    "shoa_no": 860,
+    "delta_hw_time": "-02:05",
+    "delta_lw_time": "-02:05",
+    "delta_hw_height_m": 0.0,
+    "delta_lw_height_m": 0.05
+  },
+  "bracket_local": [
+    {
+      "type": "HW",
+      "time": "2026-10-04T11:40:00",
+      "height_m": 0.52
+    },
+    {
+      "type": "LW",
+      "time": "2026-10-04T18:39:00",
+      "height_m": 0.28
+    }
+  ],
+  "tide_now": {
+    "height_m": 0.2803,
+    "display_height_m": 0.28,
+    "state": "VACIANTE",
+    "next_event": "LW",
+    "next_event_time": "2026-10-04T18:39:00",
+    "next_event_height_m": 0.28
+  },
+  "method": {
+    "publication": "SHOA PUB 3009 2026",
+    "formula": "c * [1 - cos(180° * b/a)] / 2",
+    "a_hours": 6.9833,
+    "b_hours": 0.15,
+    "range_c_m": 0.24,
+    "correction_m": 0.000273
+  }
+}

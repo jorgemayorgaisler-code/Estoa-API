@@ -1,0 +1,25 @@
+{
+  "version": "v16",
+  "status": "SOURCE_READY_FOR_MAC_XCODE_BUILD",
+  "checks": {
+    "api_singleton_present": true,
+    "undefined_base_removed": true,
+    "undefined_currentevent_removed": true,
+    "weakwindow_field_names_fixed": true,
+    "app_entry_present": true,
+    "five_tabs_present": true,
+    "project_yml_present": true,
+    "backend_python_syntax": true,
+    "xcodegen_available": false,
+    "xcode_available": false,
+    "swift_cli_available": true
+  },
+  "fixed_compile_blockers": [
+    "APIClient.shared singleton missing",
+    "tideEvents used undefined base instead of baseURL",
+    "UpcomingView referenced undefined CurrentEvent",
+    "UpcomingView used nonexistent ForecastEvent.time_local",
+    "UpcomingView used nonexistent WeakWindow.start_local/end_local"
+  ],
+  "environment_limit": "This runtime has Swift CLI but no Xcode/xcodebuild or XcodeGen, so an actual iOS compile/sign/install cannot be claimed here."
+}

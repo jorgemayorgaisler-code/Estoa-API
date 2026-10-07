@@ -1,0 +1,22 @@
+{
+  "version": "v17",
+  "status": "DEPLOYMENT_SOURCE_READY",
+  "checks": {
+    "backend_health_endpoint": true,
+    "dockerfile": true,
+    "requirements": true,
+    "api_url_not_localhost": true,
+    "api_url_from_info_plist": true,
+    "location_permission_template": true,
+    "smoke_test_pass": true
+  },
+  "device_connection_policy": "HTTPS backend URL via ESTOA_API_BASE_URL; no hard-coded localhost.",
+  "gps_policy": "Location suggests nearest station; it does not silently change the selected station.",
+  "remaining_external_steps": [
+    "Deploy backend to an HTTPS host",
+    "Set ESTOA_API_BASE_URL to deployed URL",
+    "Generate Xcode project on macOS",
+    "Sign with Apple Development Team",
+    "Run on physical iPhone"
+  ]
+}

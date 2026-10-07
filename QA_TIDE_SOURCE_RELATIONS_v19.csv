@@ -1,0 +1,9 @@
+station_id,events,chronology,alternation,height_policy,min_gap_h,max_gap_h,pass_all
+CUR003,1410,True,True,True,5.267,8.333,True
+CUR007,1411,True,True,True,4.25,7.767,True
+CUR009,1378,True,True,True,2.917,17.083,True
+CUR010,1394,True,True,True,0.617,16.2,True
+CUR011,1394,True,True,True,0.767,16.367,True
+CUR016,1410,True,True,True,5.267,8.333,True
+CUR018,1411,True,True,True,5.283,7.183,True
+CUR019,1410,True,True,True,5.4,8.467,True

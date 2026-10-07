@@ -1,0 +1,26 @@
+{
+  "release": "v18",
+  "candidate": "RC2",
+  "data_edition": 2026,
+  "current_stations": 22,
+  "automatic_tide_stations": 8,
+  "tide_events": 11218,
+  "qa": {
+    "current_regression": "75/75 PASS",
+    "current_source_spotcheck": "12/12 PASS",
+    "tide_structural": "32/32 PASS",
+    "tide_random_instants": "400/400 PASS",
+    "deployment_smoke": "PASS"
+  },
+  "runtime_contract": {
+    "https_required": true,
+    "gps_auto_switch": false,
+    "navigation_advice": false,
+    "meteorological_correction": false,
+    "astronomy_modifies_prediction": false
+  },
+  "external_blockers": [
+    "HTTPS host/account credentials are required to deploy the backend",
+    "macOS + Xcode + Apple signing team are required to build/install the iOS app"
+  ]
+}

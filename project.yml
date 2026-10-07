@@ -1,0 +1,27 @@
+name: ESTOA
+options:
+  bundleIdPrefix: cl.estoa
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  ESTOA:
+    type: application
+    platform: iOS
+    sources:
+      - path: ios
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: cl.estoa.app
+        PRODUCT_NAME: ESTOA
+        SWIFT_VERSION: 5.0
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Tu ubicación se usa únicamente para sugerir el punto de predicción más cercano."
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_ESTOA_API_BASE_URL: "$(ESTOA_API_BASE_URL)"
+    scheme:
+      testTargets: []
+
+# ESTOA runtime configuration
+# For device testing, replace with the HTTPS URL of the deployed backend.
+settings:
+  base:
+    ESTOA_API_BASE_URL: "https://YOUR-ESTOA-API.example.com"

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>ESTOA_API_BASE_URL</key><string>https://YOUR-ESTOA-API.example.com</string>
+<key>NSLocationWhenInUseUsageDescription</key><string>ESTOA usa tu ubicación únicamente para sugerir la estación disponible más cercana. La selección requiere confirmación.</string>
+</dict></plist>

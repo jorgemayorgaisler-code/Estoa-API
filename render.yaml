@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: estoa-api
+    runtime: docker
+    plan: starter
+    healthCheckPath: /health
+    autoDeploy: false
+    envVars:
+      - key: PORT
+        value: 8080

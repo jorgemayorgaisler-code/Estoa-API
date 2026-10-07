@@ -1,0 +1,23 @@
+{
+  "version": "ESTOA Full Stack v8 Integrated",
+  "stations": 22,
+  "weak_tables": "A-G",
+  "weak_windows_national_routing_pass": 22,
+  "weak_windows_national_routing_total": 22,
+  "kirke_known_window_1kn": "2026-10-04 20:45–21:55 local",
+  "kirke_known_window_pass": true,
+  "tide": {
+    "full_tide_stations": 7,
+    "event_times_only": 1,
+    "other_modes": 14,
+    "national_numeric_integration": "capability-aware; numeric PUB3009 engine not fabricated where source rows are not yet encoded"
+  },
+  "astronomy": {
+    "policy": "context only",
+    "kirke_verified_fixture": true
+  },
+  "new_endpoints": [
+    "/weak-windows",
+    "/capabilities"
+  ]
+}

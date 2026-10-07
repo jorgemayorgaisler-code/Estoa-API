@@ -1,0 +1,13 @@
+{
+  "version": "v14",
+  "stations_tested": 8,
+  "events_tested": 11218,
+  "structural_checks": 32,
+  "structural_pass": 32,
+  "all_station_checks_pass": true,
+  "random_instant_tests": 400,
+  "random_instant_pass": 400,
+  "date_boundary_transforms": 595,
+  "date_boundary_stations": 8,
+  "result": "PASS"
+}

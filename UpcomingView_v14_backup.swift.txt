@@ -1,0 +1,134 @@
+
+import SwiftUI
+
+struct UpcomingView: View {
+    @State private var stations:[StationListItem]=[]
+    @State private var selectedID="CUR011"
+    @State private var horizon=24
+    @State private var forecast:ForecastResponse?
+    @State private var weak:WeakWindowsResponse?
+    @State private var loading=false
+    @State private var error:String?
+    private let api=APIClient()
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                EstoaTheme.background.ignoresSafeArea()
+                ScrollView {
+                    VStack(spacing:16) {
+                        VStack(alignment:.leading,spacing:5) {
+                            Text("PRÓXIMAMENTE").font(.caption).bold().foregroundStyle(EstoaTheme.active)
+                            Text("Qué ocurrirá después").font(.title2).bold().foregroundStyle(.white)
+                            Text("Eventos publicados para el período seleccionado.")
+                                .font(.subheadline).foregroundStyle(.secondary)
+                        }.frame(maxWidth:.infinity,alignment:.leading)
+
+                        controls
+                        if loading { ProgressView().tint(.white) }
+                        if let w=weak, !w.windows.isEmpty { weakWindowsCard(w.windows) }
+                        if let f=forecast { timeline(f.events) }
+                        if let error { Text(error).foregroundStyle(.orange).font(.footnote) }
+                    }.padding()
+                }
+            }.task { await load() }
+        }
+    }
+
+    private var controls:some View {
+        VStack(spacing:10) {
+            Picker("Lugar",selection:$selectedID) {
+                ForEach(stations) { s in Text(s.station_name).tag(s.station_id) }
+            }.pickerStyle(.menu).tint(EstoaTheme.active)
+            Picker("Horizonte",selection:$horizon) {
+                Text("12 h").tag(12); Text("24 h").tag(24); Text("48 h").tag(48)
+            }.pickerStyle(.segmented)
+            Button { Task { await refresh() } } label: {
+                Label("Actualizar",systemImage:"arrow.clockwise")
+                    .frame(maxWidth:.infinity).padding(.vertical,8)
+            }.buttonStyle(.bordered).tint(EstoaTheme.active)
+        }.padding().background(.white.opacity(0.07),in:RoundedRectangle(cornerRadius:20))
+    }
+
+    private func timeline(_ events:[ForecastEvent])->some View {
+        VStack(spacing:0) {
+            if events.isEmpty {
+                Text("No hay eventos publicados en este período.")
+                    .foregroundStyle(.secondary).padding()
+            }
+            ForEach(events) { e in
+                HStack(alignment:.top,spacing:14) {
+                    VStack(spacing:3) {
+                        Circle().fill(dot(e.event_type)).frame(width:11,height:11)
+                        Rectangle().fill(.white.opacity(0.15)).frame(width:2,height:48)
+                    }
+                    VStack(alignment:.leading,spacing:4) {
+                        HStack {
+                            Text(title(e.event_type)).bold().foregroundStyle(.white)
+                            Spacer()
+                            Text(time(e.local_datetime)).monospacedDigit().foregroundStyle(EstoaTheme.active)
+                        }
+                        if let k=e.intensity_kn, e.event_type != "SLACK" {
+                            Text(String(format:"%.1f kn",k)).foregroundStyle(.secondary)
+                        } else if e.event_type=="SLACK" {
+                            Text("Cambio de sentido previsto").foregroundStyle(.secondary)
+                        } else {
+                            Text("Sin intensidad calculable").foregroundStyle(.secondary)
+                        }
+                        if let d=e.direction_true {
+                            Text("\(Int(d))° V").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }.padding(.bottom,14)
+                }
+            }
+        }.padding().background(.white.opacity(0.05),in:RoundedRectangle(cornerRadius:20))
+    }
+
+
+    private func weakWindowsCard(_ windows:[WeakWindow])->some View {
+        VStack(alignment:.leading,spacing:10) {
+            HStack {
+                Image(systemName:"gauge.with.dots.needle.33percent").foregroundStyle(EstoaTheme.active)
+                Text("VENTANAS ≤ 1,0 kn").font(.headline).foregroundStyle(.white)
+            }
+            ForEach(windows) { w in
+                HStack {
+                    VStack(alignment:.leading,spacing:2) {
+                        Text("\(clock(w.start)) – \(clock(w.end))").bold().foregroundStyle(.white)
+                        Text("Tabla \(w.table) · caso \(w.case)").font(.caption2).foregroundStyle(EstoaTheme.secondary)
+                    }
+                    Spacer()
+                    Text("≤ 1,0 kn").font(.caption).bold().foregroundStyle(EstoaTheme.active)
+                }
+            }
+        }.padding().background(EstoaTheme.surface,in:RoundedRectangle(cornerRadius:EstoaTheme.cardRadius))
+    }
+    private func clock(_ iso:String)->String {
+        let p=iso.split(separator:"T"); return p.count>1 ? String(p[1].prefix(5)) : iso
+    }
+
+    @MainActor private func load() async {
+        do { stations=try await api.stations(); await refresh() }
+        catch { error="No fue posible cargar las estaciones." }
+    }
+    @MainActor private func refresh() async {
+        loading=true; error=nil
+        do {
+            async let f = api.forecast(stationID:selectedID,start:Date(),hours:horizon)
+            async let w = api.weakWindows(stationID:selectedID,start:Date(),hours:horizon,threshold:1.0)
+            forecast = try await f
+            weak = try await w
+        }
+        catch { error="No fue posible obtener los próximos eventos." }
+        loading=false
+    }
+    private func title(_ s:String)->String {
+        ["SLACK":"ESTOA","MAX_FLOOD":"MÁX. FLUJO","MAX_EBB":"MÁX. REFLUJO","WEAK_VARIABLE":"DÉBIL / VARIABLE"][s] ?? s
+    }
+    private func time(_ iso:String)->String {
+        let p=iso.split(separator:"T"); return p.count>1 ? String(p[1].prefix(5)) : iso
+    }
+    private func dot(_ s:String)->Color {
+        s=="WEAK_VARIABLE" ? .orange : s=="SLACK" ? .white : .cyan
+    }
+}

@@ -1,0 +1,32 @@
+{
+  "version": "v11",
+  "full_tide_rules_encoded": 7,
+  "event_times_only_encoded": 1,
+  "target_capability_coverage": "8/8 automatic tide-capable current stations",
+  "new_rules": [
+    "CUR016 Segunda Angostura",
+    "CUR018 Bahía Posesión",
+    "CUR019 Punta Wreck"
+  ],
+  "transform_regression": "PASS",
+  "checks": {
+    "CUR016_HW": {
+      "type": "HW",
+      "minutes_from_pattern": -185,
+      "height_m": 3.27,
+      "height_mode": "ADD"
+    },
+    "CUR018_LW": {
+      "type": "LW",
+      "minutes_from_pattern": -56,
+      "height_m": 0.99,
+      "height_mode": "ADD"
+    },
+    "CUR019_HW": {
+      "type": "HW",
+      "minutes_from_pattern": -310,
+      "height_m": 5.7299999999999995,
+      "height_mode": "MULTIPLY"
+    }
+  }
+}

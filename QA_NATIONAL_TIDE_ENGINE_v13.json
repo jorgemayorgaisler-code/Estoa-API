@@ -1,0 +1,75 @@
+{
+  "version": "v13",
+  "pattern_ports_ingested": 7,
+  "pattern_records": {
+    "Puerto Montt": 1410,
+    "Castro": 1410,
+    "Puerto Chacabuco": 1410,
+    "Angostura Inglesa": 1378,
+    "Puerto Natales": 1394,
+    "Bahía Gregorio": 1411,
+    "Punta Delgada": 1411
+  },
+  "pattern_days": {
+    "Puerto Montt": 365,
+    "Castro": 365,
+    "Puerto Chacabuco": 365,
+    "Angostura Inglesa": 365,
+    "Puerto Natales": 365,
+    "Bahía Gregorio": 365,
+    "Punta Delgada": 365
+  },
+  "current_stations_with_exact_tide_engine": 8,
+  "tide_event_records": 11218,
+  "corrected_kirke_reference": {
+    "source_pub3009_oct4": [
+      [
+        "00:28",
+        0.26
+      ],
+      [
+        "04:21",
+        0.23
+      ],
+      [
+        "12:18",
+        0.56
+      ],
+      [
+        "20:25",
+        0.19
+      ]
+    ],
+    "kirke_local_oct4": [
+      [
+        "03:16",
+        0.28,
+        "LW"
+      ],
+      [
+        "11:13",
+        0.56,
+        "HW"
+      ],
+      [
+        "19:20",
+        0.24,
+        "LW"
+      ]
+    ],
+    "at_18_30": {
+      "height_m": 0.248,
+      "display_m": 0.25,
+      "trend": "FALLING",
+      "next_low_water": "19:20 / 0.24 m"
+    },
+    "status": "PASS"
+  },
+  "important_correction": "Earlier 18:39 Kirke low-water demo came from the wrong table column. v13 replaces it with the geometrically verified PUB3009 page-110 values.",
+  "guardrails": {
+    "blank_height_corrections_are_not_zero": true,
+    "source_utc_minus4_preserved": true,
+    "separate_hw_lw_time_offsets": true,
+    "add_multiply_linear_height_rules": true
+  }
+}

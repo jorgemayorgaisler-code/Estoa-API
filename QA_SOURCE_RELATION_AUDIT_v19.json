@@ -1,0 +1,31 @@
+{
+  "version": "v19",
+  "status": "PASS",
+  "bahia_orange_pattern_events": 1411,
+  "transformed_events": 11218,
+  "relations_verified": 8,
+  "qa_stations_pass": 8,
+  "qa_stations_total": 8,
+  "corrected_relations": [
+    "CUR003 pattern Castro -> Puerto Montt",
+    "CUR007 transformed source Puerto Chacabuco -> Bahía Orange",
+    "CUR016 transformed source Bahía Gregorio -> Puerto Montt"
+  ],
+  "kirke_reference_2026_10_04_1830": {
+    "available": true,
+    "height_m": 0.248,
+    "display_height_m": 0.25,
+    "trend": "FALLING",
+    "previous": {
+      "time_local": "2026-10-04T11:13:00",
+      "type": "HW",
+      "height_m": 0.56
+    },
+    "next": {
+      "time_local": "2026-10-04T19:20:00",
+      "type": "LW",
+      "height_m": 0.24
+    },
+    "method": "PUB3009_DIRECT_COSINE"
+  }
+}

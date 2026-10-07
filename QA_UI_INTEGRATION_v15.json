@@ -1,0 +1,15 @@
+{
+  "version": "v15",
+  "backend_endpoint_added": "/tide-events",
+  "upcoming_parallel_sources": [
+    "/forecast",
+    "/weak-windows",
+    "/tide-events"
+  ],
+  "now_numeric_tide": true,
+  "now_next_hw_lw": true,
+  "moment_numeric_tide": true,
+  "upcoming_current_tide_weak_windows": true,
+  "navigation_advice_added": false,
+  "status": "INTEGRATED_UI_SOURCE_READY"
+}

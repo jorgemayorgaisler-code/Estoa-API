@@ -1,0 +1,13 @@
+{
+  "version": "v12",
+  "kirke_integrated_reference": "PASS",
+  "query": "2026-10-04 18:30 local",
+  "tide_height_m": 0.28,
+  "tide_display_m": 0.28,
+  "tide_trend": "FALLING",
+  "next_low_water": "18:39 / 0.28 m",
+  "current": "4.899 kn EBB 290°T decreasing",
+  "next_slack": "21:07",
+  "weak_window": "20:45–21:55",
+  "ui_contract_added": true
+}

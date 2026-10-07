@@ -1,0 +1,34 @@
+{
+  "station_id": "CUR011",
+  "station_name": "Angostura Kirke",
+  "query_local": "2026-10-04T18:30",
+  "tide": {
+    "available": true,
+    "height_m": 0.28,
+    "display_height_m": 0.28,
+    "trend": "FALLING",
+    "previous": {
+      "time_local": "2026-10-04T11:40",
+      "type": "HW",
+      "height_m": 0.52
+    },
+    "next": {
+      "time_local": "2026-10-04T18:39",
+      "type": "LW",
+      "height_m": 0.28
+    },
+    "method": "PUB3009_DIRECT_COSINE"
+  },
+  "current": {
+    "speed_kn": 4.899,
+    "phase": "EBB",
+    "direction_true_deg": 290,
+    "trend": "DECREASING",
+    "next_slack_local": "2026-10-04T21:07"
+  },
+  "weak_current_window": {
+    "threshold_kn": 1.0,
+    "start_local": "2026-10-04T20:45",
+    "end_local": "2026-10-04T21:55"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "version": "v10",
+  "pub3009_direct_method_formula": "PASS",
+  "publication_example_correction_m": 0.116,
+  "publication_example_rounded_m": 0.12,
+  "kirke_secondary_transform": "PASS",
+  "kirke_oct4_transformed_heights_m": [
+    0.58,
+    0.3,
+    0.52,
+    0.28
+  ],
+  "encoded_current_station_tide_rules": 5,
+  "rules": [
+    "Dalcahue event-times only",
+    "Quesahuen full",
+    "Angostura Inglesa pattern",
+    "White full linear",
+    "Kirke full additive"
+  ],
+  "guardrails": [
+    "blank height correction => unavailable",
+    "supports additive/multiplicative/linear height rules",
+    "source UTC-4 retained upstream",
+    "Magallanes/Aysen +1h applied at display/local-time layer"
+  ]
+}

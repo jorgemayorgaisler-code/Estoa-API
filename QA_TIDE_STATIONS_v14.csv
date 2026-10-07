@@ -1,0 +1,9 @@
+station_id,events,local_days,chronology_pass,alternation_pass,gap_sanity_pass,height_policy_pass,min_gap_h,max_gap_h
+CUR003,1410,365,True,True,True,True,5.283,7.75
+CUR007,1410,365,True,True,True,True,4.333,8.25
+CUR009,1378,365,True,True,True,True,2.917,17.083
+CUR010,1394,365,True,True,True,True,0.617,16.2
+CUR011,1394,365,True,True,True,True,0.767,16.367
+CUR016,1411,366,True,True,True,True,3.883,8.433
+CUR018,1411,365,True,True,True,True,5.283,7.183
+CUR019,1410,365,True,True,True,True,5.4,8.467

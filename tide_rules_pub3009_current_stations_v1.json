@@ -1,0 +1,136 @@
+[
+  {
+    "station_id": "CUR003",
+    "station_name": "Canal Dalcahue",
+    "secondary_no": 570,
+    "pattern": "Puerto Montt",
+    "hw_time_min": 27,
+    "lw_time_min": 27,
+    "hw_height": {
+      "mode": "MISSING"
+    },
+    "lw_height": {
+      "mode": "MISSING"
+    },
+    "capability": "EVENT_TIMES_ONLY"
+  },
+  {
+    "station_id": "CUR007",
+    "station_name": "Paso Quesahuén",
+    "secondary_no": 717,
+    "pattern": "Bahía Orange",
+    "hw_time_min": -120,
+    "lw_time_min": -118,
+    "hw_height": {
+      "mode": "ADD",
+      "value": 0.62
+    },
+    "lw_height": {
+      "mode": "ADD",
+      "value": -0.35
+    },
+    "capability": "FULL_TIDE"
+  },
+  {
+    "station_id": "CUR009",
+    "station_name": "Angostura Inglesa",
+    "secondary_no": 770,
+    "pattern": "Angostura Inglesa",
+    "hw_time_min": 0,
+    "lw_time_min": 0,
+    "hw_height": {
+      "mode": "PATTERN"
+    },
+    "lw_height": {
+      "mode": "PATTERN"
+    },
+    "capability": "FULL_TIDE"
+  },
+  {
+    "station_id": "CUR010",
+    "station_name": "Angostura White",
+    "secondary_no": 857,
+    "pattern": "Puerto Natales",
+    "hw_time_min": -29,
+    "lw_time_min": -39,
+    "hw_height": {
+      "mode": "LINEAR",
+      "m": 0.53,
+      "b": 0.23
+    },
+    "lw_height": {
+      "mode": "LINEAR",
+      "m": 0.53,
+      "b": 0.23
+    },
+    "capability": "FULL_TIDE"
+  },
+  {
+    "station_id": "CUR011",
+    "station_name": "Angostura Kirke",
+    "secondary_no": 860,
+    "pattern": "Puerto Natales",
+    "hw_time_min": -125,
+    "lw_time_min": -125,
+    "hw_height": {
+      "mode": "ADD",
+      "value": 0.0
+    },
+    "lw_height": {
+      "mode": "ADD",
+      "value": 0.05
+    },
+    "capability": "FULL_TIDE"
+  },
+  {
+    "station_id": "CUR016",
+    "station_name": "Segunda Angostura",
+    "secondary_no": 1130,
+    "pattern": "Puerto Montt",
+    "hw_time_min": -185,
+    "lw_time_min": -185,
+    "hw_height": {
+      "mode": "ADD",
+      "value": -0.73
+    },
+    "lw_height": {
+      "mode": "ADD",
+      "value": 0.12
+    },
+    "capability": "FULL_TIDE"
+  },
+  {
+    "station_id": "CUR018",
+    "station_name": "Bahía Posesión",
+    "secondary_no": 1080,
+    "pattern": "Punta Delgada",
+    "hw_time_min": -23,
+    "lw_time_min": -56,
+    "hw_height": {
+      "mode": "ADD",
+      "value": 1.21
+    },
+    "lw_height": {
+      "mode": "ADD",
+      "value": -0.01
+    },
+    "capability": "FULL_TIDE"
+  },
+  {
+    "station_id": "CUR019",
+    "station_name": "Punta Wreck",
+    "secondary_no": 1085,
+    "pattern": "Puerto Montt",
+    "hw_time_min": -310,
+    "lw_time_min": -302,
+    "hw_height": {
+      "mode": "MULTIPLY",
+      "value": 1.91
+    },
+    "lw_height": {
+      "mode": "MULTIPLY",
+      "value": 2.46
+    },
+    "capability": "FULL_TIDE"
+  }
+]

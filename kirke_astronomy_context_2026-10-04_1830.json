@@ -1,0 +1,137 @@
+{
+  "events_october": [
+    {
+      "type": "PERIGEE",
+      "code": "P",
+      "regime": null,
+      "source_utc_minus4": "2026-10-01T16:52:00",
+      "kirke_local_utc_minus3": "2026-10-01T17:52:00"
+    },
+    {
+      "type": "DECLINATION_MAX_NORTH",
+      "code": "N",
+      "regime": null,
+      "source_utc_minus4": "2026-10-02T11:27:00",
+      "kirke_local_utc_minus3": "2026-10-02T12:27:00"
+    },
+    {
+      "type": "LAST_QUARTER",
+      "code": "PHASE",
+      "regime": "QUADRATURE",
+      "source_utc_minus4": "2026-10-03T09:25:00",
+      "kirke_local_utc_minus3": "2026-10-03T10:25:00"
+    },
+    {
+      "type": "LUNAR_EQUATOR_CROSSING",
+      "code": "E",
+      "regime": null,
+      "source_utc_minus4": "2026-10-08T22:52:00",
+      "kirke_local_utc_minus3": "2026-10-08T23:52:00"
+    },
+    {
+      "type": "NEW_MOON",
+      "code": "PHASE",
+      "regime": "SYZYGY",
+      "source_utc_minus4": "2026-10-10T11:50:00",
+      "kirke_local_utc_minus3": "2026-10-10T12:50:00"
+    },
+    {
+      "type": "APOGEE",
+      "code": "A",
+      "regime": null,
+      "source_utc_minus4": "2026-10-13T13:50:00",
+      "kirke_local_utc_minus3": "2026-10-13T14:50:00"
+    },
+    {
+      "type": "DECLINATION_MAX_SOUTH",
+      "code": "S",
+      "regime": null,
+      "source_utc_minus4": "2026-10-16T02:38:00",
+      "kirke_local_utc_minus3": "2026-10-16T03:38:00"
+    },
+    {
+      "type": "FIRST_QUARTER",
+      "code": "PHASE",
+      "regime": "QUADRATURE",
+      "source_utc_minus4": "2026-10-18T12:13:00",
+      "kirke_local_utc_minus3": "2026-10-18T13:13:00"
+    },
+    {
+      "type": "LUNAR_EQUATOR_CROSSING",
+      "code": "E",
+      "regime": null,
+      "source_utc_minus4": "2026-10-19T19:28:00",
+      "kirke_local_utc_minus3": "2026-10-19T20:28:00"
+    },
+    {
+      "type": "FULL_MOON",
+      "code": "PHASE",
+      "regime": "SYZYGY",
+      "source_utc_minus4": "2026-10-26T00:12:00",
+      "kirke_local_utc_minus3": "2026-10-26T01:12:00"
+    },
+    {
+      "type": "DECLINATION_MAX_NORTH",
+      "code": "N",
+      "regime": null,
+      "source_utc_minus4": "2026-10-26T01:54:00",
+      "kirke_local_utc_minus3": "2026-10-26T02:54:00"
+    },
+    {
+      "type": "PERIGEE",
+      "code": "P",
+      "regime": null,
+      "source_utc_minus4": "2026-10-28T14:06:00",
+      "kirke_local_utc_minus3": "2026-10-28T15:06:00"
+    }
+  ],
+  "context": {
+    "query_local": "2026-10-04T18:30:00-03:00",
+    "previous_phase": {
+      "type": "LAST_QUARTER",
+      "code": "PHASE",
+      "regime": "QUADRATURE",
+      "source_utc_minus4": "2026-10-03T09:25:00",
+      "kirke_local_utc_minus3": "2026-10-03T10:25:00"
+    },
+    "next_phase": {
+      "type": "NEW_MOON",
+      "code": "PHASE",
+      "regime": "SYZYGY",
+      "source_utc_minus4": "2026-10-10T11:50:00",
+      "kirke_local_utc_minus3": "2026-10-10T12:50:00"
+    },
+    "previous_perigee": {
+      "type": "PERIGEE",
+      "code": "P",
+      "regime": null,
+      "source_utc_minus4": "2026-10-01T16:52:00",
+      "kirke_local_utc_minus3": "2026-10-01T17:52:00"
+    },
+    "previous_declination_event": {
+      "type": "DECLINATION_MAX_NORTH",
+      "code": "N",
+      "regime": null,
+      "source_utc_minus4": "2026-10-02T11:27:00",
+      "kirke_local_utc_minus3": "2026-10-02T12:27:00"
+    },
+    "next_declination_event": {
+      "type": "LUNAR_EQUATOR_CROSSING",
+      "code": "E",
+      "regime": null,
+      "source_utc_minus4": "2026-10-08T22:52:00",
+      "kirke_local_utc_minus3": "2026-10-08T23:52:00"
+    },
+    "interpretation_policy": {
+      "role": "CONTEXT_ONLY",
+      "does_not_modify_current_prediction": true,
+      "kirke_priority": [
+        "lunar_declination",
+        "syzygy_quadrature",
+        "perigee_apogee",
+        "phase"
+      ],
+      "note": "PUB3015 identifies lunar declination as a dominant feature of the Kirke current regime."
+    }
+  }
+}

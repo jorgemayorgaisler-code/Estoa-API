@@ -1,0 +1,16 @@
+{
+  "case": "CUR011 Kirke 2026-10-04 18:30 local",
+  "expected_kn_approx": 4.899,
+  "result": {
+    "status": "CALCULATED_CONTINUOUS",
+    "intensity_kn": 4.899,
+    "phase": "EBB",
+    "direction_true": 290.0,
+    "trend": "DECREASING",
+    "segment": {
+      "from": "MAX_EBB",
+      "to": "SLACK"
+    }
+  },
+  "pass": true
+}

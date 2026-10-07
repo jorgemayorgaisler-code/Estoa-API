@@ -1,0 +1,17 @@
+{
+  "kirke_2026_10_04": [
+    {
+      "center": "2026-10-04T21:07:00",
+      "center_type": "SLACK",
+      "case": "i",
+      "table": "D",
+      "threshold_kn": 1.0,
+      "start": "2026-10-04T20:45:00",
+      "end": "2026-10-04T21:55:00",
+      "previous_max_kn": 5.4,
+      "next_max_kn": 1.8,
+      "minutes_before": 22,
+      "minutes_after": 48
+    }
+  ]
+}
