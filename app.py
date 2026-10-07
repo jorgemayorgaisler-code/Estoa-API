@@ -183,6 +183,14 @@ def all_qa():
     if isinstance(tide,dict): tide_pass=bool(tide.get("pass",tide.get("PASS",True)))
     return {"pass":bool(k["pass"] and cur["pass"] and interp["pass"] and tide_pass),"kirke":k,"current_events":cur,"interpolation":interp,"tide":tide}
 
+@app.get("/qa/moment-kirke-2026-10-07")
+def qa_moment_kirke_20261007():
+    """Regression case for the web Momento flow: Kirke, 7 Oct 2026 18:30 local."""
+    dt=datetime(2026,10,7,18,30)
+    current=instant("CUR011",dt)
+    tide=tide_at("CUR011",dt)
+    return {"station_id":"CUR011","station":"Angostura Kirke","local_datetime":"2026-10-07T18:30:00","current":current,"tide":tide}
+
 @app.get("/health")
 def health():
     return {"status":"ok","service":"ESTOA","edition":2026}
