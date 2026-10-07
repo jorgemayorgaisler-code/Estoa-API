@@ -79,6 +79,27 @@ def conditions_at(station_id:str, local_datetime:datetime):
             "tide":dict({"capability":r.tide_automatic_capability}, **tide_at(station_id,local_datetime)),
             "astronomy":{"role":"CONTEXT_ONLY"}}
 
+@app.get("/conditions/map")
+def conditions_map(at_utc: datetime | None = None):
+    """Current condition for every mapped station at one UTC instant.
+    Converts that instant to each station civil timezone before evaluating the 2026 engine.
+    """
+    from zoneinfo import ZoneInfo
+    utc = at_utc or datetime.utcnow()
+    if utc.tzinfo is None:
+        utc = utc.replace(tzinfo=ZoneInfo("UTC"))
+    else:
+        utc = utc.astimezone(ZoneInfo("UTC"))
+    out=[]
+    for _,r in REG.iterrows():
+        try:
+            local=utc.astimezone(ZoneInfo(str(r.timezone_id))).replace(tzinfo=None)
+            current=instant(r.station_id,local)
+            out.append({"station_id":r.station_id,"local_datetime":local.isoformat(),"current":current})
+        except Exception:
+            out.append({"station_id":r.station_id,"local_datetime":None,"current":None})
+    return {"at_utc":utc.isoformat(),"stations":out}
+
 @app.get("/conditions/now")
 def conditions_now(station_id:str):
     # Server clock is intentionally explicit; mobile client should normally call /conditions/at
