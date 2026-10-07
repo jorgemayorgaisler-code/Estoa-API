@@ -128,6 +128,22 @@ def tide_events(station_id: str, start_local: str, hours: int = 24):
         events.append({"time_local":x.local_dt.isoformat(),"type":x.type,"height_m":h})
     return {"station_id":station_id,"start_local":start.isoformat(),"hours":hours,"events":events}
 
+@app.get("/qa/kirke-reference")
+def kirke_reference_qa():
+    """Regression check against the validated Kirke reference case."""
+    dt=datetime(2026,10,4,18,30)
+    got=instant("CUR011",dt)
+    tide=tide_at("CUR011",dt)
+    expected={"intensity_kn":4.899,"phase":"EBB","direction_true":290.0,"trend":"DECREASING","tide_height_m":0.248}
+    checks={
+        "intensity": got.get("intensity_kn") is not None and abs(got["intensity_kn"]-expected["intensity_kn"])<=0.002,
+        "phase": got.get("phase")==expected["phase"],
+        "direction": got.get("direction_true")==expected["direction_true"],
+        "trend": got.get("trend")==expected["trend"],
+        "tide_height": tide.get("height_m") is not None and abs(float(tide["height_m"])-expected["tide_height_m"])<=0.005,
+    }
+    return {"case":"CUR011_KIRKE_2026-10-04T18:30_LOCAL","pass":all(checks.values()),"checks":checks,"expected":expected,"actual":{"current":got,"tide":tide}}
+
 @app.get("/health")
 def health():
     return {"status":"ok","service":"ESTOA","edition":2026}
