@@ -144,6 +144,19 @@ def kirke_reference_qa():
     }
     return {"case":"CUR011_KIRKE_2026-10-04T18:30_LOCAL","pass":all(checks.values()),"checks":checks,"expected":expected,"actual":{"current":got,"tide":tide}}
 
+@app.get("/qa/current-engine")
+def current_engine_qa():
+    """Structural regression QA over every published 2026 current event."""
+    checks=[]
+    for _,e in EVENTS.iterrows():
+        got=instant(e.station_id,e.local_dt.to_pydatetime())
+        ok_type=got.get("event_type")==e.event_type
+        exp=None if pd.isna(e.intensity_kn) else float(e.intensity_kn)
+        act=got.get("intensity_kn")
+        ok_intensity=(exp is None and act is None) or (exp is not None and act is not None and abs(act-exp)<0.001)
+        checks.append(ok_type and ok_intensity)
+    return {"scope":"ALL_2026_PUBLISHED_CURRENT_EVENTS","stations":int(EVENTS.station_id.nunique()),"events":len(checks),"passed":sum(checks),"failed":len(checks)-sum(checks),"pass":all(checks)}
+
 @app.get("/health")
 def health():
     return {"status":"ok","service":"ESTOA","edition":2026}
