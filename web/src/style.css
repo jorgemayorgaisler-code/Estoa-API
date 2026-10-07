@@ -73,7 +73,7 @@
 .hydro-marker.unknown{box-shadow:0 0 0 5px rgba(135,154,161,.1)}
 .hydro-marker.active{border-color:#dffaff;outline:3px solid #27c7e8}
 
-.hydro-marker{position:relative}
+.hydro-marker{position:absolute}
 .marker-speed{position:absolute;left:50%;top:22px;transform:translateX(-50%);min-width:27px;padding:2px 4px;border:1px solid rgba(220,250,255,.16);border-radius:6px;background:rgba(5,18,26,.88);color:#e5fbff;font-size:8px;font-weight:800;line-height:11px;white-space:nowrap;pointer-events:none}
 .hydro-marker.active .marker-speed{top:28px;color:#fff;border-color:rgba(39,199,232,.4)}
 
