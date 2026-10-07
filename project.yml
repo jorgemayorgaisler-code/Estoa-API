@@ -24,4 +24,4 @@ targets:
 # For device testing, replace with the HTTPS URL of the deployed backend.
 settings:
   base:
-    ESTOA_API_BASE_URL: "https://YOUR-ESTOA-API.example.com"
+    ESTOA_API_BASE_URL: "https://estoa-api.onrender.com"
