@@ -1,4 +1,4 @@
-import React,{useEffect,useRef,useState}from'react';import{createRoot}from'react-dom/client';import{Waves,Clock3,CalendarDays,Map,Menu,MapPin,LocateFixed}from'lucide-react';import maplibregl from'maplibre-gl';import'maplibre-gl/dist/maplibre-gl.css';import'./style.css';
+import React,{useEffect,useRef,useState}from'react';import{createRoot}from'react-dom/client';import{Waves,Clock3,CalendarDays,Map,Menu,MapPin,LocateFixed}from'lucide-react';import*as maplibregl from'maplibre-gl';import'maplibre-gl/dist/maplibre-gl.css';import'./style.css';
 const API='https://estoa-api.onrender.com';
 const valid2026=s=>String(s).slice(0,4)==='2026';
 const localKey=s=>{let [d,t='00:00:00']=String(s||'').split('T'),[Y,M,D]=d.split('-').map(Number),[h=0,m=0,sec=0]=t.split(':').map(Number);return Date.UTC(Y,M-1,D,h,m,sec)};
