@@ -2,7 +2,9 @@
 import pandas as pd, json
 from pathlib import Path
 from app import EVENTS, REG
-DATA=Path(__file__).resolve().parent/"data"
+ROOT=Path(__file__).resolve().parent
+DATA=ROOT/"data"
+if not (DATA/"current_method_registry.csv").exists(): DATA=ROOT
 METHODS=pd.read_csv(DATA/"current_method_registry.csv")
 WEAK=pd.read_csv(DATA/"weak_tables_A_G.csv")
 
