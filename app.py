@@ -66,7 +66,9 @@ def instant(station_id, dt):
 @app.get("/stations")
 def stations():
     cols=["station_id","station_name","app_mode","tide_automatic_capability","weak_current_table","timezone_rule_2026","latitude","longitude","flow_direction_true","ebb_direction_true"]
-    return REG[cols].where(pd.notna(REG[cols]),None).to_dict("records")
+    df=REG[cols].copy().astype(object)
+    df=df.where(pd.notna(df),None)
+    return df.to_dict("records")
 
 @app.get("/conditions/at")
 def conditions_at(station_id:str, local_datetime:datetime):
