@@ -76,3 +76,6 @@
 .hydro-marker{position:relative}
 .marker-speed{position:absolute;left:50%;top:22px;transform:translateX(-50%);min-width:27px;padding:2px 4px;border:1px solid rgba(220,250,255,.16);border-radius:6px;background:rgba(5,18,26,.88);color:#e5fbff;font-size:8px;font-weight:800;line-height:11px;white-space:nowrap;pointer-events:none}
 .hydro-marker.active .marker-speed{top:28px;color:#fff;border-color:rgba(39,199,232,.4)}
+
+.next article em{display:block;margin-top:2px;color:#6fd8e8;font-size:9px;font-style:normal;font-weight:800;letter-spacing:.5px}
+.next-slack{border-color:rgba(111,216,232,.3)!important;background:linear-gradient(180deg,rgba(37,189,221,.08),rgba(255,255,255,.02))}
