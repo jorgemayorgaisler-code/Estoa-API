@@ -73,13 +73,15 @@ function render(data,limit,windowData){
 }
 function renderTide(data){
  const target=$('tide-status');
- if(!data||!data.tide){target.textContent='Marea no disponible para esta consulta.';return}
+ if(!data||!data.tide||data.tide.available===false){target.textContent='Marea no disponible para esta consulta.';return}
  const t=data.tide,h=t.height_m;
  const height=typeof h==='number'&&Number.isFinite(h)?h.toFixed(2)+' m':'Altura no disponible';
  const status=t.status||t.method||'Método no informado';
  const trend=t.trend||t.tendency||null;
+ const eventType=t.next&&t.next.type;
+ const eventLabel=trend==='EVENT'?(eventType==='HW'?'Pleamar tabulada':eventType==='LW'?'Bajamar tabulada':'Evento de marea tabulado'):null;
  const translated={RISING:'Subiendo',FALLING:'Bajando',HIGH:'Pleamar',LOW:'Bajamar',STABLE:'Casi estacionaria'};
- target.textContent=height+' · '+(translated[trend]||'Tendencia no determinada')+' · '+status;
+ target.textContent=height+' · '+(eventLabel||translated[trend]||'Tendencia no determinada')+' · '+status;
 }
 async function loadTide(){
  const selected=$('moment').value;
