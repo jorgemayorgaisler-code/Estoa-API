@@ -254,6 +254,49 @@ def all_qa():
             "kirke":k,"current_events":cur,"interpolation":interp,
             "tide":{"pass":tide_pass,"status":tide_status,"report":tide},"timezones":tz}
 
+@app.get("/qa/kirke-thresholds")
+def qa_kirke_thresholds():
+    """Check modeled weak-current windows against independent instant() samples.
+    This is internal model consistency, NOT independent SHOA validation.
+    """
+    from integrated_services import weak_windows
+    sid="CUR011"
+    start=datetime(2026,10,7,0,0)
+    hours=24
+    thresholds=[0.0,0.1,0.5,1.0,2.0,2.5,3.0,5.0,10.0]
+    cases=[]
+    for limit in thresholds:
+        windows=weak_windows(sid,start,hours,limit)
+        intervals=[]
+        valid=True
+        for w in windows:
+            lo=pd.Timestamp(w["start"]); hi=pd.Timestamp(w["end"])
+            if hi<=lo or lo<pd.Timestamp(start) or hi>pd.Timestamp(start)+pd.Timedelta(hours=hours):
+                valid=False
+            intervals.append((lo,hi))
+        ordered=all(intervals[i][1]<=intervals[i+1][0] for i in range(len(intervals)-1))
+        # Empirical table windows are checked for shape, not against interpolated speeds.
+        empirical=any("table" in w for w in windows)
+        mismatches=[]
+        if not empirical and limit>0:
+            for step in range(hours*12+1):
+                dt=pd.Timestamp(start)+pd.Timedelta(minutes=5*step)
+                actual=instant(sid,dt.to_pydatetime())
+                speed=actual.get("intensity_kn")
+                if speed is None or actual.get("status") not in ("PUBLISHED_EVENT","CALCULATED_CONTINUOUS"):
+                    continue
+                inside=any(lo<=dt<=hi for lo,hi in intervals)
+                expected=abs(speed)<=limit
+                if inside!=expected and abs(abs(speed)-limit)>0.02:
+                    if len(mismatches)<5:
+                        mismatches.append({"time":dt.isoformat(),"kn":speed,"in_window":inside})
+        case_pass=valid and ordered and not mismatches
+        cases.append({"threshold_kn":limit,"window_count":len(windows),"empirical":empirical,
+                      "pass":bool(case_pass),"mismatches":mismatches,
+                      "zero_kn_note":"Zero-current instants have no duration; empty windows are expected." if limit==0 else None})
+    return {"scope":"KIRKE_2026_10_07_MODEL_INTERNAL_CONSISTENCY",
+            "independent_shoa_validation":False,"pass":all(x["pass"] for x in cases),"cases":cases}
+
 @app.get("/qa/kirke-october-source")
 def qa_kirke_october_source():
     """Independent transcription of selected PUB3015 p.78 October 7 events.
