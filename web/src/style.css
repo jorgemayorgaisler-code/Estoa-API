@@ -86,3 +86,5 @@
 .map-data-status{margin:-7px 2px 12px;color:#a9c7d0;font-size:11px;letter-spacing:.15px}
 
 .connection-banner{margin:8px 0 12px;padding:12px 14px;border:1px solid rgba(250,187,88,.45);border-radius:12px;background:rgba(250,187,88,.08);color:#ffe2b4;font-size:12px;line-height:1.5}.connection-banner button{margin-left:8px;padding:5px 10px;border:1px solid currentColor;border-radius:8px;background:transparent;color:inherit;cursor:pointer}
+
+.threshold-control{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0;padding:12px;border:1px solid rgba(106,191,210,.35);border-radius:12px;font-size:12px;font-weight:700;letter-spacing:.04em}.threshold-control input{width:94px;min-width:0;padding:10px 8px;border-radius:8px;border:1px solid rgba(106,191,210,.6);background:#102b3a;color:#fff;font:inherit;font-size:17px;text-align:center}
