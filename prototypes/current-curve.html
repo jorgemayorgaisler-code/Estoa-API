@@ -17,12 +17,12 @@ small,.muted{color:#afc6d1}
 <label>Inicio local<input id="start" type="datetime-local" value="2026-10-07T00:00"></label>
 <label>Horas<input id="hours" type="number" min="1" max="168" value="24"></label>
 <label>Límite (nudos)<input id="limit" type="number" min="0" max="10" step="0.1" value="2.5"></label>
-<button id="load">Actualizar gráfico</button>
+<label>Hora a consultar<input id="moment" type="datetime-local" value="2026-10-07T18:30"></label><button id="load">Actualizar gráfico</button>
 </section>
 <section><div id="status" role="status"></div><div id="error" role="alert"></div>
 <svg id="chart" viewBox="0 0 900 330" role="img" aria-label="Curva de intensidad de corriente y límite seleccionado"></svg>
 <div class="legend"><small>— Corriente calculada / evento publicado</small><small>-- Límite configurable</small><small>● Evento de estoa</small></div>
-<p class="muted" id="window-status"></p><p class="muted" id="notes"></p></section>
+<p id="moment-status" role="status">Selecciona una hora y actualiza el gráfico.</p><p class="muted" id="window-status"></p><p class="muted" id="notes"></p></section>
 <section><h2>Ventanas de corriente débil</h2><p class="muted">Horas civiles de la estación. La duración corresponde al intervalo mostrado, que puede estar recortado por el período consultado.</p>
 <div class="table-scroll"><table><thead><tr><th>Inicio</th><th>Término</th><th>Duración</th><th>Método</th><th>Observación</th></tr></thead><tbody id="window-rows"><tr><td colspan="5">Consulta un período para ver las ventanas.</td></tr></tbody></table></div></section>
 <p class="muted">Herramienta de planificación. Verificar tablas oficiales SHOA, condiciones observadas y publicaciones vigentes. Las curvas entre eventos son estimaciones del modelo ESTOA, no valores tabulados SHOA.</p>
@@ -53,6 +53,19 @@ function render(data,limit,windowData){
  const v=Math.abs(Number(p.intensity_kn));segment.push(x(i)+','+y(v));
  if(p.phase==='SLACK'||p.phase==='VARIABLE'){svg.append(el('circle',{cx:x(i),cy:y(v),r:4,fill:'#ffb86c'}))}
  });flush();
+ const selected=$('moment').value;
+ const selectedMs=Date.parse(selected);
+ if(Number.isFinite(selectedMs)&&selectedMs>=first&&selectedMs<=last&&last>first){
+   const selectedX=L+(W-L-R)*(selectedMs-first)/(last-first);
+   line(svg,selectedX,T,selectedX,H-B,'#f6f0c0',true);
+   const closest=s.reduce((best,p,i)=>Math.abs(Date.parse(p.time_local)-selectedMs)<Math.abs(Date.parse(s[best].time_local)-selectedMs)?i:best,0);
+   const sample=s[closest];
+   const exact=Date.parse(sample.time_local)===selectedMs;
+   const kn=sample.intensity_kn;
+   const trend={INCREASING:'Aumentando',DECREASING:'Disminuyendo',EVENT:'Evento publicado',UNKNOWN:'Sin tendencia disponible'}[sample.trend]||'Tendencia no disponible';
+   const phase={FLOOD:'Flujo',EBB:'Reflujo',SLACK:'Estoa',VARIABLE:'Variable'}[sample.phase]||'Fase desconocida';
+   $('moment-status').textContent='Hora seleccionada: '+selected.replace('T',' ')+' · '+(exact?'Muestra exacta':'Muestra más cercana: '+sample.time_local.replace('T',' ').slice(0,16))+' · '+(kn===null?'Intensidad no disponible':Math.abs(kn).toFixed(2)+' kn')+' · '+phase+' · '+trend+' · '+(sample.method||'Método desconocido');
+ }else $('moment-status').textContent='La hora seleccionada está fuera del gráfico o no es válida.';
  for(let i=0;i<=4;i++){const idx=Math.round((s.length-1)*i/4);label(svg,Math.max(0,x(idx)-26),H-14,(s[idx].time_local||'').slice(11,16))}
  $('notes').textContent='Fuente por muestra: PUBLISHED_EVENT (evento tabulado) o CALCULATED_CONTINUOUS (estimación). Huecos: sin dato. Intensidades representadas en valor absoluto.';
  $('status').textContent=s.length+' muestras · '+data.station_id+' · '+data.hours+' horas';
@@ -88,5 +101,6 @@ async function load(){
 }
  catch(e){renderWindows(null);$('status').textContent='No disponible';$('error').textContent='No se pudo consultar /current-curve. El servicio podría estar pendiente de despliegue. '+e.message}
 }
-$('load').addEventListener('click',load);$('limit').addEventListener('input',()=>{if(window.lastCurve)load()});
+$('load').addEventListener('click',load);$('limit').addEventListener('change',()=>{if(window.lastCurve)load()});
+$('moment').addEventListener('change',()=>{if(window.lastCurve)render(window.lastCurve,Number($('limit').value),window.lastWindows)});
 </script></body></html>
