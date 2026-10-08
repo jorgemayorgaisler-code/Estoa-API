@@ -87,7 +87,9 @@ def weak_windows(station_id,start,hours=24,threshold=1.0):
         ws=c-pd.Timedelta(minutes=before); we=c+pd.Timedelta(minutes=after)
         if we>=s and ws<=e:
             out.append({"start":ws.isoformat(),"end":we.isoformat(),"center":c.isoformat(),
-                        "threshold_kn":threshold,"table":mr.weak_current_table,"case":case})
+                        "threshold_kn":threshold,"table":mr.weak_current_table,"case":case,
+                        "method":"PUB3015_EMPIRICAL_TABLE",
+                        "source":"PUB3015_2026_WEAK_CURRENT_TABLE_"+str(mr.weak_current_table)})
     return out
 
 def tide_capability(station_id):
