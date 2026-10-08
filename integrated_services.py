@@ -19,7 +19,7 @@ def _nearest_minutes(table,max_kn,threshold,case):
 def _model_threshold_windows(station_id, start, hours, threshold):
     """Calculated crossings of the continuous current model; not PUB3015 empirical table values."""
     import math
-    if not (0 < threshold <= 15):
+    if not (0 <= threshold <= 10):
         return []
     s=pd.Timestamp(start)
     e=s+pd.Timedelta(hours=hours)
