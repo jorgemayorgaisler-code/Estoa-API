@@ -30,6 +30,17 @@ small,.muted{color:#afc6d1}
 </main><script>
 const API = new URLSearchParams(location.search).get('api') || 'https://estoa-api.onrender.com';
 const $=id=>document.getElementById(id);
+// Compare station-local civil timestamps without applying the viewer's timezone.
+function civilMs(value){
+ if(typeof value!=='string')return NaN;
+ const m=/^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2})(?::(\\d{2}))?$/.exec(value);
+ if(!m)return NaN;
+ const [year,month,day,hour,minute,second]=m.slice(1).map(Number);
+ const stamp=Date.UTC(year,month-1,day,hour,minute,second||0);
+ const d=new Date(stamp);
+ return d.getUTCFullYear()===year&&d.getUTCMonth()===month-1&&d.getUTCDate()===day&&d.getUTCHours()===hour&&d.getUTCMinutes()===minute?stamp:NaN;
+}
+
 function el(name,attrs){const e=document.createElementNS('http://www.w3.org/2000/svg',name);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,String(v));return e}
 function line(svg,x1,y1,x2,y2,color,dash){svg.append(el('line',{x1,y1,x2,y2,stroke:color,'stroke-width':1.5,...(dash?{'stroke-dasharray':'7 5'}:{})}))}
 function label(svg,x,y,value){const t=el('text',{x,y,fill:'#c5d9e2','font-size':13});t.textContent=value;svg.append(t)}
@@ -37,9 +48,9 @@ function render(data,limit,windowData){
  const svg=$('chart');svg.replaceChildren();const s=data.samples||[];if(!s.length){$('status').textContent='Sin muestras';return}
  const W=900,H=330,L=56,R=20,T=25,B=45;const max=Math.max(1,limit,...s.map(p=>Number.isFinite(p.intensity_kn)?Math.abs(p.intensity_kn):0))*1.12;
  const x=i=>L+(W-L-R)*i/Math.max(1,s.length-1),y=v=>H-B-(H-T-B)*v/max;
- const first=Date.parse(s[0].time_local),last=Date.parse(s[s.length-1].time_local);
+ const first=civilMs(s[0].time_local),last=civilMs(s[s.length-1].time_local);
  if(windowData&&last>first){for(const w of windowData.windows||[]){
-  const a=Date.parse(w.start),b=Date.parse(w.end);
+  const a=civilMs(w.start),b=civilMs(w.end);
   if(!Number.isFinite(a)||!Number.isFinite(b)||b<=a)continue;
   const x1=L+(W-L-R)*Math.max(0,Math.min(1,(a-first)/(last-first)));
   const x2=L+(W-L-R)*Math.max(0,Math.min(1,(b-first)/(last-first)));
@@ -55,13 +66,13 @@ function render(data,limit,windowData){
  if(p.phase==='SLACK'||p.phase==='VARIABLE'){svg.append(el('circle',{cx:x(i),cy:y(v),r:4,fill:'#ffb86c'}))}
  });flush();
  const selected=$('moment').value;
- const selectedMs=Date.parse(selected);
+ const selectedMs=civilMs(selected);
  if(Number.isFinite(selectedMs)&&selectedMs>=first&&selectedMs<=last&&last>first){
    const selectedX=L+(W-L-R)*(selectedMs-first)/(last-first);
    line(svg,selectedX,T,selectedX,H-B,'#f6f0c0',true);
-   const closest=s.reduce((best,p,i)=>Math.abs(Date.parse(p.time_local)-selectedMs)<Math.abs(Date.parse(s[best].time_local)-selectedMs)?i:best,0);
+   const closest=s.reduce((best,p,i)=>Math.abs(civilMs(p.time_local)-selectedMs)<Math.abs(civilMs(s[best].time_local)-selectedMs)?i:best,0);
    const sample=s[closest];
-   const exact=Date.parse(sample.time_local)===selectedMs;
+   const exact=civilMs(sample.time_local)===selectedMs;
    const kn=sample.intensity_kn;
    const trend={INCREASING:'Aumentando',DECREASING:'Disminuyendo',EVENT:'Evento publicado',UNKNOWN:'Sin tendencia disponible'}[sample.trend]||'Tendencia no disponible';
    const phase={FLOOD:'Flujo',EBB:'Reflujo',SLACK:'Estoa',VARIABLE:'Variable'}[sample.phase]||'Fase desconocida';
@@ -91,12 +102,12 @@ async function loadTide(){
  catch(e){renderTide(null)}
 }
 function renderNextSlack(forecast){
- const target=$('next-slack'),moment=Date.parse($('moment').value);
+ const target=$('next-slack'),moment=civilMs($('moment').value);
  if(!Number.isFinite(moment)){target.textContent='Próxima estoa: hora de consulta inválida.';return}
  if(!forecast||!Array.isArray(forecast.events)){target.textContent='Próxima estoa: eventos publicados no disponibles.';return}
- const candidates=forecast.events.filter(e=>e.event_type==='SLACK'&&Number.isFinite(Date.parse(e.local_datetime))&&Date.parse(e.local_datetime)>=moment).sort((a,b)=>Date.parse(a.local_datetime)-Date.parse(b.local_datetime));
+ const candidates=forecast.events.filter(e=>e.event_type==='SLACK'&&Number.isFinite(civilMs(e.local_datetime))&&civilMs(e.local_datetime)>=moment).sort((a,b)=>civilMs(a.local_datetime)-civilMs(b.local_datetime));
  if(!candidates.length){target.textContent='No hay un evento de estoa publicado posterior a la hora seleccionada dentro del período consultado. No se puede inferir su ausencia fuera de ese período.';return}
- const next=candidates[0],minutes=Math.round((Date.parse(next.local_datetime)-moment)/60000);
+ const next=candidates[0],minutes=Math.round((civilMs(next.local_datetime)-moment)/60000);
  target.textContent='Próxima estoa tabulada: '+next.local_datetime.replace('T',' ').slice(0,16)+' · En '+Math.floor(minutes/60)+' h '+String(minutes%60).padStart(2,'0')+' min desde la hora seleccionada. Fuente: evento registrado PUB 3015; confirmar publicación oficial.';
 }
 function renderWindows(data){
@@ -104,7 +115,7 @@ function renderWindows(data){
  const windows=data&&Array.isArray(data.windows)?data.windows:[];
  if(!windows.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=5;td.textContent=data?'Sin ventanas devueltas. Esto no demuestra ausencia de un período navegable.':'Ventanas no disponibles.';tr.append(td);tbody.append(tr);return}
  for(const w of windows){
-  const a=Date.parse(w.start),b=Date.parse(w.end);
+  const a=civilMs(w.start),b=civilMs(w.end);
   const duration=Number.isFinite(a)&&Number.isFinite(b)&&b>a?Math.round((b-a)/60000):null;
   const fmt=s=>typeof s==='string'?s.replace('T',' ').slice(0,16):'—';
   const method=w.method==='PUB3015_EMPIRICAL_TABLE'?'Tabla empírica PUB 3015':w.method==='CALCULATED_CONTINUOUS'?'Modelo continuo ESTOA':'Método no identificado';
