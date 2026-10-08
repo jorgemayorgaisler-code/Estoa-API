@@ -1,5 +1,7 @@
 """Functional API contract smoke tests for ESTOA 2026."""
 import unittest
+import csv
+from pathlib import Path
 from datetime import datetime
 from fastapi import HTTPException
 from app import stations, conditions_at, capabilities, weak_windows_endpoint, version, health
@@ -18,6 +20,14 @@ class ApiContracts(unittest.TestCase):
         self.assertIn("CUR011", ids)
         for sid in ("CUR005", "CUR006", "CUR007", "CUR008"):
             self.assertEqual(next(s for s in catalog if s["station_id"] == sid)["timezone_id"], "America/Coyhaique")
+
+    def test_registry_copies_match(self):
+        root = Path(__file__).resolve().parents[1]
+        with (root / "station_registry.csv").open(newline="", encoding="utf-8") as source:
+            primary = list(csv.DictReader(source))
+        with (root / "data" / "station_registry.csv").open(newline="", encoding="utf-8") as source:
+            secondary = list(csv.DictReader(source))
+        self.assertEqual(primary, secondary, "Duplicated station registries must stay identical")
 
     def test_kirke_conditions_contract(self):
         result = conditions_at("CUR011", datetime(2026, 10, 4, 18, 30))
