@@ -22,7 +22,7 @@ small,.muted{color:#afc6d1}
 <section><div id="status" role="status"></div><div id="error" role="alert"></div>
 <svg id="chart" viewBox="0 0 900 330" role="img" aria-label="Curva de intensidad de corriente y límite seleccionado"></svg>
 <div class="legend"><small>— Corriente calculada / evento publicado</small><small>-- Límite configurable</small><small>● Evento de estoa</small></div>
-<p id="moment-status" role="status">Selecciona una hora y actualiza el gráfico.</p><p class="muted" id="window-status"></p><p class="muted" id="notes"></p></section>
+<p id="next-slack" role="status">Próxima estoa: consulta pendiente.</p><p id="moment-status" role="status">Selecciona una hora y actualiza el gráfico.</p><p class="muted" id="window-status"></p><p class="muted" id="notes"></p></section>
 <section><h2>Ventanas de corriente débil</h2><p class="muted">Horas civiles de la estación. La duración corresponde al intervalo mostrado, que puede estar recortado por el período consultado.</p>
 <div class="table-scroll"><table><thead><tr><th>Inicio</th><th>Término</th><th>Duración</th><th>Método</th><th>Observación</th></tr></thead><tbody id="window-rows"><tr><td colspan="5">Consulta un período para ver las ventanas.</td></tr></tbody></table></div></section>
 <p class="muted">Herramienta de planificación. Verificar tablas oficiales SHOA, condiciones observadas y publicaciones vigentes. Las curvas entre eventos son estimaciones del modelo ESTOA, no valores tabulados SHOA.</p>
@@ -70,6 +70,15 @@ function render(data,limit,windowData){
  $('notes').textContent='Fuente por muestra: PUBLISHED_EVENT (evento tabulado) o CALCULATED_CONTINUOUS (estimación). Huecos: sin dato. Intensidades representadas en valor absoluto.';
  $('status').textContent=s.length+' muestras · '+data.station_id+' · '+data.hours+' horas';
 }
+function renderNextSlack(forecast){
+ const target=$('next-slack'),moment=Date.parse($('moment').value);
+ if(!Number.isFinite(moment)){target.textContent='Próxima estoa: hora de consulta inválida.';return}
+ if(!forecast||!Array.isArray(forecast.events)){target.textContent='Próxima estoa: eventos publicados no disponibles.';return}
+ const candidates=forecast.events.filter(e=>e.event_type==='SLACK'&&Number.isFinite(Date.parse(e.local_datetime))&&Date.parse(e.local_datetime)>=moment).sort((a,b)=>Date.parse(a.local_datetime)-Date.parse(b.local_datetime));
+ if(!candidates.length){target.textContent='No hay un evento de estoa publicado posterior a la hora seleccionada dentro del período consultado. No se puede inferir su ausencia fuera de ese período.';return}
+ const next=candidates[0],minutes=Math.round((Date.parse(next.local_datetime)-moment)/60000);
+ target.textContent='Próxima estoa tabulada: '+next.local_datetime.replace('T',' ').slice(0,16)+' · En '+Math.floor(minutes/60)+' h '+String(minutes%60).padStart(2,'0')+' min desde la hora seleccionada. Fuente: evento registrado PUB 3015; confirmar publicación oficial.';
+}
 function renderWindows(data){
  const tbody=$('window-rows');tbody.replaceChildren();
  const windows=data&&Array.isArray(data.windows)?data.windows:[];
@@ -92,15 +101,17 @@ async function load(){
  const params=new URLSearchParams({station_id:$('station').value,start:$('start').value+':00',hours:String(hours),interval_minutes:'30'});
  try{
  const wp=new URLSearchParams({station_id:$('station').value,start:$('start').value+':00',hours:String(hours),threshold_kn:String(limit)});
- const [curveRes,windowRes]=await Promise.all([fetch(API+'/current-curve?'+params),fetch(API+'/weak-windows?'+wp)]);
+ const fp=new URLSearchParams({station_id:$('station').value,start:$('start').value+':00',hours:String(hours)});
+ const [curveRes,windowRes,forecastRes]=await Promise.all([fetch(API+'/current-curve?'+params),fetch(API+'/weak-windows?'+wp),fetch(API+'/forecast?'+fp)]);
  if(!curveRes.ok)throw Error('Curva HTTP '+curveRes.status);
  window.lastCurve=await curveRes.json();window.lastWindows=null;
  if(windowRes.ok){window.lastWindows=await windowRes.json();$('window-status').textContent=(window.lastWindows.windows||[]).length+' ventanas de corriente débil. Sombreado orientativo, no autorización de paso.'}
  else $('window-status').textContent='Ventanas no disponibles (HTTP '+windowRes.status+').';
- render(window.lastCurve,limit,window.lastWindows);renderWindows(window.lastWindows);
+ window.lastForecast=forecastRes.ok?await forecastRes.json():null;
+ render(window.lastCurve,limit,window.lastWindows);renderWindows(window.lastWindows);renderNextSlack(window.lastForecast);
 }
- catch(e){renderWindows(null);$('status').textContent='No disponible';$('error').textContent='No se pudo consultar /current-curve. El servicio podría estar pendiente de despliegue. '+e.message}
+ catch(e){renderNextSlack(null);renderWindows(null);$('status').textContent='No disponible';$('error').textContent='No se pudo consultar /current-curve. El servicio podría estar pendiente de despliegue. '+e.message}
 }
 $('load').addEventListener('click',load);$('limit').addEventListener('change',()=>{if(window.lastCurve)load()});
-$('moment').addEventListener('change',()=>{if(window.lastCurve)render(window.lastCurve,Number($('limit').value),window.lastWindows)});
+$('moment').addEventListener('change',()=>{if(window.lastCurve){render(window.lastCurve,Number($('limit').value),window.lastWindows);renderNextSlack(window.lastForecast)}});
 </script></body></html>
