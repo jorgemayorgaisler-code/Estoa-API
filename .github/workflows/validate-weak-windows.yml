@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install -r requirements.txt
-      - run: python -c 'from app import timezone_qa; import json; print(json.dumps(timezone_qa(),indent=2),flush=True)'
+      - run: python -c 'from app import timezone_qa; import json; r=timezone_qa(); print(json.dumps(r,indent=2),flush=True); assert r["pass"], "Timezone QA failed"'
   production-smoke:
     runs-on: ubuntu-latest
     steps:
