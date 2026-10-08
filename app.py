@@ -254,6 +254,32 @@ def all_qa():
             "kirke":k,"current_events":cur,"interpolation":interp,
             "tide":{"pass":tide_pass,"status":tide_status,"report":tide},"timezones":tz}
 
+@app.get("/qa/kirke-october-source")
+def qa_kirke_october_source():
+    """Independent transcription of selected PUB3015 p.78 October 7 events.
+    Source clock UTC-4; CUR011 publication rule adds 60 min for local civil time.
+    """
+    checks=[]
+    reference=[
+        ("2026-10-07T02:13:00","SLACK",None),
+        ("2026-10-07T04:40:00","MAX_EBB",3.7),
+        ("2026-10-07T07:45:00","SLACK",None),
+        ("2026-10-07T11:27:00","MAX_FLOOD",5.9),
+    ]
+    for source_time,event_type,speed in reference:
+        source=pd.Timestamp(source_time)
+        local=source+pd.Timedelta(hours=1)
+        rows=EVENTS[(EVENTS.station_id=="CUR011")&(EVENTS.local_dt==local)&(EVENTS.event_type==event_type)]
+        actual=None
+        if len(rows)==1:
+            value=rows.iloc[0].intensity_kn
+            actual=None if pd.isna(value) else float(value)
+        ok=len(rows)==1 and (speed is None or (actual is not None and abs(actual-speed)<0.051))
+        checks.append({"source_time_utc_minus_4":source.isoformat(),"local_time":local.isoformat(),
+                       "event_type":event_type,"expected_kn":speed,"actual_kn":actual,"pass":bool(ok)})
+    return {"source":"PUB3015_2026_P78_KIRKE_07_OCT","source_time_rule":"UTC-4 + 1 hour",
+            "pass":all(x["pass"] for x in checks),"checks":checks}
+
 @app.get("/qa/moment-kirke-2026-10-07")
 def qa_moment_kirke_20261007():
     """Regression case for the web Momento flow: Kirke, 7 Oct 2026 18:30 local."""
