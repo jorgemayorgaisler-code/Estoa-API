@@ -23,6 +23,7 @@ small,.muted{color:#afc6d1}
 <svg id="chart" viewBox="0 0 900 330" role="img" aria-label="Curva de intensidad de corriente y límite seleccionado"></svg>
 <div class="legend"><small>— Corriente calculada / evento publicado</small><small>-- Límite configurable</small><small>● Evento de estoa</small></div>
 <p id="next-slack" role="status">Próxima estoa: consulta pendiente.</p><p id="moment-status" role="status">Selecciona una hora y actualiza el gráfico.</p><p class="muted" id="window-status"></p><p class="muted" id="notes"></p></section>
+<section><h2>Marea en la hora seleccionada</h2><p id="tide-status">Consulta pendiente.</p><p class="muted">Altura y tendencia únicamente cuando el motor de mareas dispone de datos. No se extrapolan alturas para estaciones sin capacidad.</p></section>
 <section><h2>Ventanas de corriente débil</h2><p class="muted">Horas civiles de la estación. La duración corresponde al intervalo mostrado, que puede estar recortado por el período consultado.</p>
 <div class="table-scroll"><table><thead><tr><th>Inicio</th><th>Término</th><th>Duración</th><th>Método</th><th>Observación</th></tr></thead><tbody id="window-rows"><tr><td colspan="5">Consulta un período para ver las ventanas.</td></tr></tbody></table></div></section>
 <p class="muted">Herramienta de planificación. Verificar tablas oficiales SHOA, condiciones observadas y publicaciones vigentes. Las curvas entre eventos son estimaciones del modelo ESTOA, no valores tabulados SHOA.</p>
@@ -70,6 +71,23 @@ function render(data,limit,windowData){
  $('notes').textContent='Fuente por muestra: PUBLISHED_EVENT (evento tabulado) o CALCULATED_CONTINUOUS (estimación). Huecos: sin dato. Intensidades representadas en valor absoluto.';
  $('status').textContent=s.length+' muestras · '+data.station_id+' · '+data.hours+' horas';
 }
+function renderTide(data){
+ const target=$('tide-status');
+ if(!data||!data.tide){target.textContent='Marea no disponible para esta consulta.';return}
+ const t=data.tide,h=t.height_m;
+ const height=typeof h==='number'&&Number.isFinite(h)?h.toFixed(2)+' m':'Altura no disponible';
+ const status=t.status||t.method||'Método no informado';
+ const trend=t.trend||t.tendency||null;
+ const translated={RISING:'Subiendo',FALLING:'Bajando',HIGH:'Pleamar',LOW:'Bajamar',STABLE:'Casi estacionaria'};
+ target.textContent=height+' · '+(translated[trend]||'Tendencia no determinada')+' · '+status;
+}
+async function loadTide(){
+ const selected=$('moment').value;
+ if(!selected){renderTide(null);return}
+ const p=new URLSearchParams({station_id:$('station').value,local_datetime:selected+':00'});
+ try{const response=await fetch(API+'/conditions/at?'+p);renderTide(response.ok?await response.json():null)}
+ catch(e){renderTide(null)}
+}
 function renderNextSlack(forecast){
  const target=$('next-slack'),moment=Date.parse($('moment').value);
  if(!Number.isFinite(moment)){target.textContent='Próxima estoa: hora de consulta inválida.';return}
@@ -108,9 +126,9 @@ async function load(){
  if(windowRes.ok){window.lastWindows=await windowRes.json();$('window-status').textContent=(window.lastWindows.windows||[]).length+' ventanas de corriente débil. Sombreado orientativo, no autorización de paso.'}
  else $('window-status').textContent='Ventanas no disponibles (HTTP '+windowRes.status+').';
  window.lastForecast=forecastRes.ok?await forecastRes.json():null;
- render(window.lastCurve,limit,window.lastWindows);renderWindows(window.lastWindows);renderNextSlack(window.lastForecast);
+ render(window.lastCurve,limit,window.lastWindows);renderWindows(window.lastWindows);renderNextSlack(window.lastForecast);await loadTide();
 }
- catch(e){renderNextSlack(null);renderWindows(null);$('status').textContent='No disponible';$('error').textContent='No se pudo consultar /current-curve. El servicio podría estar pendiente de despliegue. '+e.message}
+ catch(e){renderNextSlack(null);renderTide(null);renderWindows(null);$('status').textContent='No disponible';$('error').textContent='No se pudo consultar /current-curve. El servicio podría estar pendiente de despliegue. '+e.message}
 }
 $('load').addEventListener('click',load);$('limit').addEventListener('change',()=>{if(window.lastCurve)load()});
 $('moment').addEventListener('change',()=>{if(window.lastCurve){render(window.lastCurve,Number($('limit').value),window.lastWindows);renderNextSlack(window.lastForecast)}});
