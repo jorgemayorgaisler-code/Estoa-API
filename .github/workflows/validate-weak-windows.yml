@@ -23,3 +23,12 @@ jobs:
           node-version: '22'
       - run: npm install && npm run build
         working-directory: web
+  timezone:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: python -c 'from app import timezone_qa; import json; print(json.dumps(timezone_qa(),indent=2),flush=True)'
