@@ -274,7 +274,10 @@ def qa_kirke_thresholds():
             if hi<=lo or lo<pd.Timestamp(start) or hi>pd.Timestamp(start)+pd.Timedelta(hours=hours):
                 valid=False
             intervals.append((lo,hi))
-        ordered=all(intervals[i][1]<=intervals[i+1][0] for i in range(len(intervals)-1))
+        ordered=all(intervals[i][0]<=intervals[i+1][0] for i in range(len(intervals)-1))
+        # Table-derived windows may overlap; the API returns them as separate source cases.
+        # Model windows must be disjoint after merging.
+        model_disjoint=all(intervals[i][1]<=intervals[i+1][0] for i in range(len(intervals)-1))
         # Empirical table windows are checked for shape, not against interpolated speeds.
         empirical=any("table" in w for w in windows)
         mismatches=[]
@@ -290,7 +293,7 @@ def qa_kirke_thresholds():
                 if inside!=expected and abs(abs(speed)-limit)>0.02:
                     if len(mismatches)<5:
                         mismatches.append({"time":dt.isoformat(),"kn":speed,"in_window":inside})
-        case_pass=valid and ordered and not mismatches
+        case_pass=valid and ordered and (empirical or model_disjoint) and not mismatches
         cases.append({"threshold_kn":limit,"window_count":len(windows),"empirical":empirical,
                       "pass":bool(case_pass),"mismatches":mismatches,
                       "zero_kn_note":"Zero-current instants have no duration; empty windows are expected." if limit==0 else None})
