@@ -21,10 +21,10 @@ with tempfile.TemporaryDirectory() as tmp:
         ("2026-10-07T18:30", "2026-10-07T19:30:00", 60),
         ("2026-10-07T23:30", "2026-10-08T00:30", 60),
     ]
-    checks = "const assert=require('node:assert/strict');\\n" + helper + "\\n"
+    checks = "const assert=require('node:assert/strict');\n" + helper + "\n"
     for start, end, minutes in cases:
-        checks += f"assert.equal((civilMs({json.dumps(end)})-civilMs({json.dumps(start)}))/60000,{minutes});\\n"
-    checks += "assert.ok(Number.isNaN(civilMs('2026-02-30T12:00')));\\n"
+        checks += f"assert.equal((civilMs({json.dumps(end)})-civilMs({json.dumps(start)}))/60000,{minutes});\n"
+    checks += "assert.ok(Number.isNaN(civilMs('2026-02-30T12:00')));\n"
     for zone in ("UTC", "America/Santiago", "Europe/Madrid"):
         subprocess.run(["node", "-e", checks], check=True, env={**__import__("os").environ, "TZ": zone})
 print("ESTOA current chart syntax and integration contract: PASS")
