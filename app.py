@@ -63,6 +63,22 @@ def instant(station_id, dt):
             "phase":phase_of(ref.event_type),"direction_true":float(ref.direction_true) if pd.notna(ref.direction_true) else None,
             "trend":trend,"segment":{"from":a.event_type,"to":b.event_type}}
 
+@app.get("/tide-curve")
+def tide_curve(station_id: str, start: datetime, hours: int = 12):
+    """Half-hourly height samples from the existing PUB3009 tide engine."""
+    station_row(station_id)
+    if hours<1 or hours>24:
+        raise HTTPException(422,"hours must be between 1 and 24")
+    t=pd.Timestamp(start.replace(tzinfo=None))
+    samples=[]
+    for n in range(hours*2+1):
+        dt=t+pd.Timedelta(minutes=30*n)
+        result=tide_at(station_id,dt)
+        h=result.get("height_m")
+        samples.append({"time_local":dt.isoformat(),"height_m":h,
+                        "method":result.get("method")})
+    return {"station_id":station_id,"start":t.isoformat(),"hours":hours,"samples":samples}
+
 @app.get("/sun-events")
 def sun_events(station_id: str, local_date: str):
     """Solar sunrise and sunset at the station, in its civil timezone."""
