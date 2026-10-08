@@ -3,10 +3,26 @@ import unittest
 from unittest.mock import patch
 import pandas as pd
 from integrated_services import _nearest_minutes, weak_windows, weak_windows_diagnostics, WEAK
-from app import EVENTS
+from app import EVENTS, current_curve
 
 
 class CurrentWindowSafetyTests(unittest.TestCase):
+    def test_current_curve_chart_contract(self):
+        start = pd.Timestamp("2026-10-07T00:00:00")
+        result = current_curve("CUR011", start.to_pydatetime(), 1, 30)
+        self.assertEqual(len(result["samples"]), 3)
+        self.assertEqual(result["samples"][0]["time_local"], start.isoformat())
+        self.assertEqual(result["samples"][-1]["time_local"], "2026-10-07T01:00:00")
+        self.assertTrue(all("method" in s and "intensity_kn" in s for s in result["samples"]))
+
+    def test_current_curve_preserves_missing_data(self):
+        with patch("app.instant", return_value={
+            "status": "OUT_OF_DATASET", "intensity_kn": None,
+            "phase": "UNKNOWN", "trend": "UNKNOWN", "direction_true": None
+        }):
+            result = current_curve("CUR011", pd.Timestamp("2026-10-07").to_pydatetime(), 1, 60)
+        self.assertTrue(all(s["intensity_kn"] is None for s in result["samples"]))
+
     def test_midpoint_ties_are_not_silently_guessed(self):
         # Synthetic fixture avoids floating-point midpoint ambiguity in source CSV.
         table = pd.DataFrame([
