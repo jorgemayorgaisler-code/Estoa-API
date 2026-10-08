@@ -261,10 +261,14 @@ def qa_kirke_october_source():
     """
     checks=[]
     reference=[
+        ("2026-10-07T00:13:00","MAX_FLOOD",3.0),
         ("2026-10-07T02:13:00","SLACK",None),
         ("2026-10-07T04:40:00","MAX_EBB",3.7),
         ("2026-10-07T07:45:00","SLACK",None),
         ("2026-10-07T11:27:00","MAX_FLOOD",5.9),
+        ("2026-10-07T14:36:00","SLACK",None),
+        ("2026-10-07T18:44:00","MAX_EBB",5.6),
+        ("2026-10-07T21:40:00","SLACK",None),
     ]
     for source_time,event_type,speed in reference:
         source=pd.Timestamp(source_time)
