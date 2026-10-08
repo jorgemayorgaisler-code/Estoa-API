@@ -259,6 +259,35 @@ def all_qa():
             "kirke":k,"current_events":cur,"interpolation":interp,
             "tide":{"pass":tide_pass,"status":tide_status,"report":tide},"timezones":tz}
 
+@app.get("/qa/shoa-weak-window-examples")
+def qa_shoa_weak_window_examples():
+    """Independently published PUB3015 2026 pp.166-168 examples, 1-5.
+    Verifies both half-window lookups and local clock arithmetic.
+    """
+    from integrated_services import _nearest_minutes
+    cases=[
+        ("G","i","2026-02-02T16:13:00",2.3,1.5,58,67,"2026-02-02T15:15:00","2026-02-02T17:20:00"),
+        ("D","i","2026-09-03T19:19:00",3.9,1.2,27,75,"2026-09-03T18:52:00","2026-09-03T20:34:00"),
+        ("G","ii","2026-01-13T14:42:00",2.5,2.6,150,150,"2026-01-13T12:12:00","2026-01-13T17:12:00"),
+        ("C","ii","2026-03-08T07:30:00",3.0,2.1,132,140,"2026-03-08T05:18:00","2026-03-08T09:50:00"),
+        ("G","iii","2026-06-03T08:09:00",2.5,2.4,109,110,"2026-06-03T06:20:00","2026-06-03T09:59:00"),
+    ]
+    checks=[]
+    for table,case,center,prev,nxt,expected_before,expected_after,expected_start,expected_end in cases:
+        before=_nearest_minutes(table,prev,1.0,case)
+        after=_nearest_minutes(table,nxt,1.0,case)
+        center_dt=pd.Timestamp(center)
+        start=(center_dt-pd.Timedelta(minutes=before)).isoformat() if before is not None else None
+        end=(center_dt+pd.Timedelta(minutes=after)).isoformat() if after is not None else None
+        passed=before==expected_before and after==expected_after and start==expected_start and end==expected_end
+        checks.append({"table":table,"case":case,"center":center,
+                       "before_minutes":before,"after_minutes":after,
+                       "expected_before_minutes":expected_before,"expected_after_minutes":expected_after,
+                       "start":start,"end":end,"pass":bool(passed)})
+    return {"source":"PUB3015_2026_P166_168_EXAMPLES_1_5",
+            "pass":all(x["pass"] for x in checks),"examples":checks,
+            "scope":"EMPIRICAL_TABLE_LOOKUP_AND_WINDOW_ARITHMETIC_NOT_ALL_STATION_EVENT_SELECTION"}
+
 @app.get("/qa/kirke-table-d-integrity")
 def qa_kirke_table_d_integrity():
     """Structural checks of all digitized Table D cells; not source-by-source verification."""
