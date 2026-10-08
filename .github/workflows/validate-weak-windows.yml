@@ -18,6 +18,7 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_api_contracts.py' -v
       - run: python -m unittest discover -s tests -p 'test_current_window_safety.py' -v
       - run: python -m unittest discover -s tests -p 'test_user_journey.py' -v
+      - run: python -m unittest discover -s tests -p 'test_tide_status.py' -v
       - run: python -c 'from app import all_qa; r=all_qa(); print({k:v.get("pass") for k,v in r.items() if isinstance(v,dict)}, flush=True); print(r["timezones"],flush=True); assert r["pass"]'
   frontend:
     runs-on: ubuntu-latest
