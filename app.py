@@ -63,6 +63,27 @@ def instant(station_id, dt):
             "phase":phase_of(ref.event_type),"direction_true":float(ref.direction_true) if pd.notna(ref.direction_true) else None,
             "trend":trend,"segment":{"from":a.event_type,"to":b.event_type}}
 
+@app.get("/sun-events")
+def sun_events(station_id: str, local_date: str):
+    """Solar sunrise and sunset at the station, in its civil timezone."""
+    from datetime import date
+    from zoneinfo import ZoneInfo
+    from astral import Observer
+    from astral.sun import sun
+    r=station_row(station_id)
+    try:
+        day=date.fromisoformat(local_date)
+    except ValueError:
+        raise HTTPException(422,"Invalid local_date")
+    if pd.isna(r.latitude) or pd.isna(r.longitude):
+        return {"station_id":station_id,"date":local_date,"sunrise":None,"sunset":None,"status":"NO_COORDINATES"}
+    tz=ZoneInfo(str(r.timezone_id))
+    try:
+        result=sun(Observer(latitude=float(r.latitude),longitude=float(r.longitude)),date=day,tzinfo=tz)
+        return {"station_id":station_id,"date":local_date,"sunrise":result["sunrise"].isoformat(),"sunset":result["sunset"].isoformat(),"status":"CALCULATED_ASTRONOMICAL"}
+    except ValueError:
+        return {"station_id":station_id,"date":local_date,"sunrise":None,"sunset":None,"status":"NO_SUNRISE_OR_SUNSET"}
+
 @app.get("/stations")
 def stations():
     cols=["station_id","station_name","app_mode","tide_automatic_capability","weak_current_table","timezone_rule_2026","timezone_id","latitude","longitude","flow_direction_true","ebb_direction_true"]
