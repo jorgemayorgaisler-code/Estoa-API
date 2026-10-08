@@ -23,6 +23,15 @@ class CurrentWindowSafetyTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             weak_windows_diagnostics("CUR011", pd.Timestamp("2026-10-07"), 24, float("nan"))
 
+    def test_empty_results_keep_selected_method_provenance(self):
+        # Empty windows must not silently reclassify empirical SHOA lookups.
+        with patch("integrated_services.weak_windows", return_value=[]):
+            empirical = weak_windows_diagnostics(
+                "CUR011", pd.Timestamp("2026-10-07"), 24, 1.0)
+            self.assertEqual(empirical["method"], "PUB3015_EMPIRICAL_TABLE")
+            self.assertFalse(empirical["has_windows"])
+            self.assertTrue(empirical["empty_result_note"])
+
     def test_diagnostics_preserve_empirical_intervals(self):
         sid = "CUR011"
         g = EVENTS[EVENTS.station_id == sid]
