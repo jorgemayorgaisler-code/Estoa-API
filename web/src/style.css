@@ -88,3 +88,14 @@
 .connection-banner{margin:8px 0 12px;padding:12px 14px;border:1px solid rgba(250,187,88,.45);border-radius:12px;background:rgba(250,187,88,.08);color:#ffe2b4;font-size:12px;line-height:1.5}.connection-banner button{margin-left:8px;padding:5px 10px;border:1px solid currentColor;border-radius:8px;background:transparent;color:inherit;cursor:pointer}
 
 .threshold-control{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0;padding:12px;border:1px solid rgba(106,191,210,.35);border-radius:12px;font-size:12px;font-weight:700;letter-spacing:.04em}.threshold-control input{width:94px;min-width:0;padding:10px 8px;border-radius:8px;border:1px solid rgba(106,191,210,.6);background:#102b3a;color:#fff;font:inherit;font-size:17px;text-align:center}
+
+/* Accessible, thumb-friendly station navigation */
+.station-picker{display:flex;flex-direction:column;gap:5px;min-width:0}
+.station-picker label{font-size:10px;font-weight:800;letter-spacing:.09em;color:#9ac8d3}
+.station-picker select{max-width:100%;min-height:44px}
+.quick-actions{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 8px;padding:0;border:0;background:transparent;position:static;height:auto}
+.quick-actions button{flex:1 1 auto;min-height:44px;padding:9px 12px;border:1px solid rgba(106,191,210,.35);border-radius:12px;background:#102b3a;color:#dff8ff;font-size:12px;font-weight:750;cursor:pointer}
+.quick-actions button.active{border-color:#44c9e2;background:#164558}
+.quick-actions button:disabled{opacity:.5;cursor:wait}
+.station-context{margin:0 2px 14px;color:#9bbdc6;font-size:11px;line-height:1.5}
+@media(max-width:580px){header{display:flex;flex-wrap:wrap;gap:12px;align-items:stretch}header>div:first-child{flex:1 1 100%}.station-picker{flex:1 1 100%}.station-picker select{width:100%;font-size:16px}.quick-actions{gap:6px}.quick-actions button{font-size:11px;padding:10px 7px}.station-context{font-size:11px}}
