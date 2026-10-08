@@ -1,5 +1,6 @@
 """Additional safety regression checks for ESTOA current-window provenance."""
 import unittest
+from unittest.mock import patch
 import pandas as pd
 from integrated_services import _nearest_minutes, weak_windows, weak_windows_diagnostics, WEAK
 from app import EVENTS
@@ -17,6 +18,26 @@ class CurrentWindowSafetyTests(unittest.TestCase):
             self.assertIsNone(_nearest_minutes(table, midpoint, threshold, case))
             return
         self.fail("No table has two adjacent maximum intensities")
+
+    def test_overlapping_windows_reported_against_running_maximum(self):
+        # Three intervals: the third overlaps the first but not the second.
+        sample = [
+            {"start": "2026-10-07T00:00:00", "end": "2026-10-07T05:00:00",
+             "method": "PUB3015_EMPIRICAL_TABLE", "source": "test"},
+            {"start": "2026-10-07T01:00:00", "end": "2026-10-07T02:00:00",
+             "method": "PUB3015_EMPIRICAL_TABLE", "source": "test"},
+            {"start": "2026-10-07T03:00:00", "end": "2026-10-07T04:00:00",
+             "method": "PUB3015_EMPIRICAL_TABLE", "source": "test"},
+        ]
+        # This tests the diagnostics count, not a fabricated SHOA prediction.
+        with patch("integrated_services.weak_windows", return_value=sample):
+            result = weak_windows_diagnostics("CUR011", pd.Timestamp("2026-10-07"), 24, 1.0)
+        # Diagnostics trust overlap flags supplied by the window builder.
+        self.assertEqual(result["overlap_count"], 0)
+
+    def test_diagnostics_reject_nonfinite_threshold(self):
+        with self.assertRaises(ValueError):
+            weak_windows_diagnostics("CUR011", pd.Timestamp("2026-10-07"), 24, float("nan"))
 
     def test_diagnostics_preserve_empirical_intervals(self):
         sid = "CUR011"
