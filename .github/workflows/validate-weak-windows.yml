@@ -29,6 +29,7 @@ jobs:
           node-version: '22'
       - run: npm install && npm run build
         working-directory: web
+      - run: python3 tests/check_current_chart.py
   timezone:
     runs-on: ubuntu-latest
     steps:
