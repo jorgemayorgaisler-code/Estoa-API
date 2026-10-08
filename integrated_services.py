@@ -16,9 +16,58 @@ def _nearest_minutes(table,max_kn,threshold,case):
     if len(ties)!=1: return None
     return int(ties.iloc[0].minutes)
 
-def weak_windows(station_id,start,hours=24,threshold=1.0):
+def _model_threshold_windows(station_id, start, hours, threshold):
+    """Calculated crossings of the continuous current model; not PUB3015 empirical table values."""
+    import math
+    if not (0 < threshold <= 15):
+        return []
+    s=pd.Timestamp(start)
+    e=s+pd.Timedelta(hours=hours)
     g=EVENTS[EVENTS.station_id==station_id].sort_values("local_dt").reset_index(drop=True)
+    intervals=[]
+    maxima={"MAX_FLOOD","MAX_EBB"}
+    for i in range(len(g)-1):
+        a,b=g.iloc[i],g.iloc[i+1]
+        if not ((a.event_type=="SLACK" and b.event_type in maxima) or
+                (a.event_type in maxima and b.event_type=="SLACK")):
+            continue
+        maximum=b if a.event_type=="SLACK" else a
+        if pd.isna(maximum.intensity_kn):
+            continue
+        speed=abs(float(maximum.intensity_kn))
+        if speed<=0:
+            continue
+        duration=b.local_dt-a.local_dt
+        if duration<=pd.Timedelta(0):
+            continue
+        ratio=min(1.0,threshold/speed)
+        if a.event_type=="SLACK":
+            fraction=2*math.asin(ratio)/math.pi
+            lo,hi=a.local_dt,a.local_dt+duration*fraction
+        else:
+            fraction=2*math.acos(ratio)/math.pi
+            lo,hi=a.local_dt+duration*fraction,b.local_dt
+        if hi>=s and lo<=e:
+            intervals.append((max(lo,s),min(hi,e)))
+    intervals.sort()
+    merged=[]
+    for lo,hi in intervals:
+        if merged and lo<=merged[-1][1]+pd.Timedelta(seconds=1):
+            merged[-1]=(merged[-1][0],max(merged[-1][1],hi))
+        else:
+            merged.append((lo,hi))
+    return [{"start":lo.isoformat(),"end":hi.isoformat(),
+             "threshold_kn":threshold,"method":"CALCULATED_CONTINUOUS",
+             "source":"ESTOA_CURRENT_MODEL","case":"continuous"}
+            for lo,hi in merged if hi>lo]
+
+
+def weak_windows(station_id,start,hours=24,threshold=1.0):
     mr=METHODS[METHODS.station_id==station_id].iloc[0]
+    supported=set(float(x) for x in str(mr.empirical_thresholds_kn).split(',') if x.strip())
+    if not any(abs(float(threshold)-x)<1e-6 for x in supported):
+        return _model_threshold_windows(station_id,start,hours,float(threshold))
+    g=EVENTS[EVENTS.station_id==station_id].sort_values("local_dt").reset_index(drop=True)
     s=pd.Timestamp(start); e=s+pd.Timedelta(hours=hours); out=[]
     for i,r in g.iterrows():
         c=r.local_dt
