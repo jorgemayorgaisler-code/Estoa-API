@@ -2,6 +2,8 @@ name: Validate SHOA weak-current windows
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 jobs:
   verify:
