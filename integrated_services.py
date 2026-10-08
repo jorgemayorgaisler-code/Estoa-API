@@ -113,8 +113,15 @@ def weak_windows_diagnostics(station_id, start, hours=24, threshold=1.0):
     if not math.isfinite(float(threshold)) or not (0 <= float(threshold) <= 10) or not (1 <= hours <= 168):
         raise ValueError("Invalid query range")
     windows = weak_windows(station_id, start, hours, threshold)
+    registry_row = METHODS[METHODS.station_id == station_id].iloc[0]
+    empirical_thresholds = {
+        float(value) for value in str(registry_row.empirical_thresholds_kn).split(",")
+        if value.strip()
+    }
+    # Provenance describes the selected calculation path, even when no windows
+    # were produced (e.g. insufficient events or an unresolved table lookup).
     method = ("PUB3015_EMPIRICAL_TABLE"
-              if any(w.get("method") == "PUB3015_EMPIRICAL_TABLE" for w in windows)
+              if any(abs(float(threshold) - value) < 1e-6 for value in empirical_thresholds)
               else "CALCULATED_CONTINUOUS")
     return {
         "station_id": station_id, "threshold_kn": float(threshold),
