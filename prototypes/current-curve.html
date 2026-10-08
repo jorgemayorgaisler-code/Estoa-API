@@ -131,5 +131,5 @@ async function load(){
  catch(e){renderNextSlack(null);renderTide(null);renderWindows(null);$('status').textContent='No disponible';$('error').textContent='No se pudo consultar /current-curve. El servicio podría estar pendiente de despliegue. '+e.message}
 }
 $('load').addEventListener('click',load);$('limit').addEventListener('change',()=>{if(window.lastCurve)load()});
-$('moment').addEventListener('change',()=>{if(window.lastCurve){render(window.lastCurve,Number($('limit').value),window.lastWindows);renderNextSlack(window.lastForecast)}});
+$('moment').addEventListener('change',()=>{if(window.lastCurve){render(window.lastCurve,Number($('limit').value),window.lastWindows);renderNextSlack(window.lastForecast);loadTide()}});
 </script></body></html>
