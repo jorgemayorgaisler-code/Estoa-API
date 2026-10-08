@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ESTOA | Corrientes</title>
+<style>
+:root{font-family:system-ui,Arial,sans-serif;color:#e7f2f6;background:#071b29}
+body{margin:0;padding:24px}main{max-width:980px;margin:auto}h1{letter-spacing:.13em}
+section{background:#102c3c;border:1px solid #345064;border-radius:16px;padding:18px;margin:16px 0}
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:end}label{display:grid;gap:6px;font-size:.9rem}
+input,select,button{background:#19394b;color:white;border:1px solid #52788a;border-radius:8px;padding:9px}
+button{cursor:pointer;background:#24718c}svg{width:100%;height:auto;display:block}
+small,.muted{color:#afc6d1}.legend{display:flex;gap:20px;flex-wrap:wrap}
+#error{color:#ffb6a8}#status{min-height:1.5em}
+</style></head><body><main><h1>ESTOA</h1><p>Corrientes de marea · gráfico exploratorio</p>
+<section class="controls">
+<label>Estación<select id="station"><option value="CUR011">Angostura Kirke (CUR011)</option></select></label>
+<label>Inicio local<input id="start" type="datetime-local" value="2026-10-07T00:00"></label>
+<label>Horas<input id="hours" type="number" min="1" max="168" value="24"></label>
+<label>Límite (nudos)<input id="limit" type="number" min="0" max="10" step="0.1" value="2.5"></label>
+<button id="load">Actualizar gráfico</button>
+</section>
+<section><div id="status" role="status"></div><div id="error" role="alert"></div>
+<svg id="chart" viewBox="0 0 900 330" role="img" aria-label="Curva de intensidad de corriente y límite seleccionado"></svg>
+<div class="legend"><small>— Corriente calculada / evento publicado</small><small>-- Límite configurable</small><small>● Evento de estoa</small></div>
+<p class="muted" id="notes"></p></section>
+<p class="muted">Herramienta de planificación. Verificar tablas oficiales SHOA, condiciones observadas y publicaciones vigentes. Las curvas entre eventos son estimaciones del modelo ESTOA, no valores tabulados SHOA.</p>
+</main><script>
+const API = new URLSearchParams(location.search).get('api') || 'https://estoa-api.onrender.com';
+const $=id=>document.getElementById(id);
+function el(name,attrs){const e=document.createElementNS('http://www.w3.org/2000/svg',name);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,String(v));return e}
+function line(svg,x1,y1,x2,y2,color,dash){svg.append(el('line',{x1,y1,x2,y2,stroke:color,'stroke-width':1.5,...(dash?{'stroke-dasharray':'7 5'}:{})}))}
+function label(svg,x,y,value){const t=el('text',{x,y,fill:'#c5d9e2','font-size':13});t.textContent=value;svg.append(t)}
+function render(data,limit){
+ const svg=$('chart');svg.replaceChildren();const s=data.samples||[];if(!s.length){$('status').textContent='Sin muestras';return}
+ const W=900,H=330,L=56,R=20,T=25,B=45;const max=Math.max(1,limit,...s.map(p=>Number.isFinite(p.intensity_kn)?Math.abs(p.intensity_kn):0))*1.12;
+ const x=i=>L+(W-L-R)*i/Math.max(1,s.length-1),y=v=>H-B-(H-T-B)*v/max;
+ for(let i=0;i<=4;i++){const val=max*i/4;line(svg,L,y(val),W-R,y(val),'#294858');label(svg,5,y(val)+4,val.toFixed(1))}
+ line(svg,L,H-B,W-R,H-B,'#7294a4');line(svg,L,T,L,H-B,'#7294a4');
+ line(svg,L,y(limit),W-R,y(limit),'#f2c66c',true);label(svg,W-115,Math.max(15,y(limit)-7),'Límite '+limit+' kn');
+ let segment=[];function flush(){if(segment.length>1)svg.append(el('polyline',{points:segment.join(' '),fill:'none',stroke:'#6bd3dc','stroke-width':2.5,'stroke-linejoin':'round'}));segment=[]}
+ s.forEach((p,i)=>{if(p.intensity_kn===null||!Number.isFinite(Number(p.intensity_kn))){flush();return}
+ const v=Math.abs(Number(p.intensity_kn));segment.push(x(i)+','+y(v));
+ if(p.phase==='SLACK'||p.phase==='VARIABLE'){svg.append(el('circle',{cx:x(i),cy:y(v),r:4,fill:'#ffb86c'}))}
+ });flush();
+ for(let i=0;i<=4;i++){const idx=Math.round((s.length-1)*i/4);label(svg,Math.max(0,x(idx)-26),H-14,(s[idx].time_local||'').slice(11,16))}
+ $('notes').textContent='Fuente por muestra: PUBLISHED_EVENT (evento tabulado) o CALCULATED_CONTINUOUS (estimación). Huecos: sin dato. Intensidades representadas en valor absoluto.';
+ $('status').textContent=s.length+' muestras · '+data.station_id+' · '+data.hours+' horas';
+}
+async function load(){
+ $('error').textContent='';$('status').textContent='Consultando API…';
+ const limit=Number($('limit').value),hours=Number($('hours').value);
+ if(!Number.isFinite(limit)||limit<0||limit>10||!Number.isInteger(hours)||hours<1||hours>168){$('error').textContent='Límite entre 0 y 10 nudos y período entre 1 y 168 horas.';return}
+ const params=new URLSearchParams({station_id:$('station').value,start:$('start').value+':00',hours:String(hours),interval_minutes:'30'});
+ try{const res=await fetch(API+'/current-curve?'+params);if(!res.ok)throw Error('HTTP '+res.status);(window.lastCurve=await res.json(),render(window.lastCurve,limit))}
+ catch(e){$('status').textContent='No disponible';$('error').textContent='No se pudo consultar /current-curve. El servicio podría estar pendiente de despliegue. '+e.message}
+}
+$('load').addEventListener('click',load);$('limit').addEventListener('input',()=>{if(window.lastCurve)render(window.lastCurve,Number($('limit').value))});
+</script></body></html>
