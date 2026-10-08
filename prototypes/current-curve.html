@@ -8,7 +8,8 @@ section{background:#102c3c;border:1px solid #345064;border-radius:16px;padding:1
 .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:end}label{display:grid;gap:6px;font-size:.9rem}
 input,select,button{background:#19394b;color:white;border:1px solid #52788a;border-radius:8px;padding:9px}
 button{cursor:pointer;background:#24718c}svg{width:100%;height:auto;display:block}
-small,.muted{color:#afc6d1}.legend{display:flex;gap:20px;flex-wrap:wrap}
+small,.muted{color:#afc6d1}
+.table-scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:640px}th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #345064}th{color:#b6dce7}td{font-variant-numeric:tabular-nums} .warning{color:#ffd08b}.legend{display:flex;gap:20px;flex-wrap:wrap}
 #error{color:#ffb6a8}#status{min-height:1.5em}
 </style></head><body><main><h1>ESTOA</h1><p>Corrientes de marea · gráfico exploratorio</p>
 <section class="controls">
@@ -22,6 +23,8 @@ small,.muted{color:#afc6d1}.legend{display:flex;gap:20px;flex-wrap:wrap}
 <svg id="chart" viewBox="0 0 900 330" role="img" aria-label="Curva de intensidad de corriente y límite seleccionado"></svg>
 <div class="legend"><small>— Corriente calculada / evento publicado</small><small>-- Límite configurable</small><small>● Evento de estoa</small></div>
 <p class="muted" id="window-status"></p><p class="muted" id="notes"></p></section>
+<section><h2>Ventanas de corriente débil</h2><p class="muted">Horas civiles de la estación. La duración corresponde al intervalo mostrado, que puede estar recortado por el período consultado.</p>
+<div class="table-scroll"><table><thead><tr><th>Inicio</th><th>Término</th><th>Duración</th><th>Método</th><th>Observación</th></tr></thead><tbody id="window-rows"><tr><td colspan="5">Consulta un período para ver las ventanas.</td></tr></tbody></table></div></section>
 <p class="muted">Herramienta de planificación. Verificar tablas oficiales SHOA, condiciones observadas y publicaciones vigentes. Las curvas entre eventos son estimaciones del modelo ESTOA, no valores tabulados SHOA.</p>
 </main><script>
 const API = new URLSearchParams(location.search).get('api') || 'https://estoa-api.onrender.com';
@@ -54,6 +57,21 @@ function render(data,limit,windowData){
  $('notes').textContent='Fuente por muestra: PUBLISHED_EVENT (evento tabulado) o CALCULATED_CONTINUOUS (estimación). Huecos: sin dato. Intensidades representadas en valor absoluto.';
  $('status').textContent=s.length+' muestras · '+data.station_id+' · '+data.hours+' horas';
 }
+function renderWindows(data){
+ const tbody=$('window-rows');tbody.replaceChildren();
+ const windows=data&&Array.isArray(data.windows)?data.windows:[];
+ if(!windows.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=5;td.textContent=data?'Sin ventanas devueltas. Esto no demuestra ausencia de un período navegable.':'Ventanas no disponibles.';tr.append(td);tbody.append(tr);return}
+ for(const w of windows){
+  const a=Date.parse(w.start),b=Date.parse(w.end);
+  const duration=Number.isFinite(a)&&Number.isFinite(b)&&b>a?Math.round((b-a)/60000):null;
+  const fmt=s=>typeof s==='string'?s.replace('T',' ').slice(0,16):'—';
+  const method=w.method==='PUB3015_EMPIRICAL_TABLE'?'Tabla empírica PUB 3015':w.method==='CALCULATED_CONTINUOUS'?'Modelo continuo ESTOA':'Método no identificado';
+  const notes=[w.table?'Tabla '+w.table:'',w.case?'Caso '+w.case:'',w.overlaps_previous?'Se superpone a otra ventana':'',w.full_start&&w.full_start!==w.start?'Inicio recortado':'',w.full_end&&w.full_end!==w.end?'Término recortado':''].filter(Boolean).join(' · ')||'Estimación para planificación';
+  const tr=document.createElement('tr');
+  for(const value of [fmt(w.start),fmt(w.end),duration===null?'—':Math.floor(duration/60)+' h '+String(duration%60).padStart(2,'0')+' min',method,notes]){const td=document.createElement('td');td.textContent=value;tr.append(td)}
+  tbody.append(tr);
+ }
+}
 async function load(){
  $('error').textContent='';$('status').textContent='Consultando API…';
  const limit=Number($('limit').value),hours=Number($('hours').value);
@@ -66,9 +84,9 @@ async function load(){
  window.lastCurve=await curveRes.json();window.lastWindows=null;
  if(windowRes.ok){window.lastWindows=await windowRes.json();$('window-status').textContent=(window.lastWindows.windows||[]).length+' ventanas de corriente débil. Sombreado orientativo, no autorización de paso.'}
  else $('window-status').textContent='Ventanas no disponibles (HTTP '+windowRes.status+').';
- render(window.lastCurve,limit,window.lastWindows);
+ render(window.lastCurve,limit,window.lastWindows);renderWindows(window.lastWindows);
 }
- catch(e){$('status').textContent='No disponible';$('error').textContent='No se pudo consultar /current-curve. El servicio podría estar pendiente de despliegue. '+e.message}
+ catch(e){renderWindows(null);$('status').textContent='No disponible';$('error').textContent='No se pudo consultar /current-curve. El servicio podría estar pendiente de despliegue. '+e.message}
 }
 $('load').addEventListener('click',load);$('limit').addEventListener('input',()=>{if(window.lastCurve)load()});
 </script></body></html>
