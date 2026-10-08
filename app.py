@@ -79,6 +79,36 @@ def tide_curve(station_id: str, start: datetime, hours: int = 12):
                         "method":result.get("method")})
     return {"station_id":station_id,"start":t.isoformat(),"hours":hours,"samples":samples}
 
+@app.get("/current-curve")
+def current_curve(station_id: str, start: datetime, hours: int = 24, interval_minutes: int = 30):
+    """Chart-ready current samples. Gaps remain null; no values are invented."""
+    station_row(station_id)
+    if not 1 <= hours <= 168:
+        raise HTTPException(422, "hours must be between 1 and 168")
+    if interval_minutes not in (5, 10, 15, 30, 60):
+        raise HTTPException(422, "interval_minutes must be 5, 10, 15, 30 or 60")
+    s = pd.Timestamp(start.replace(tzinfo=None))
+    count = hours * 60 // interval_minutes
+    samples = []
+    for i in range(count + 1):
+        dt = s + pd.Timedelta(minutes=i * interval_minutes)
+        current = instant(station_id, dt.to_pydatetime())
+        samples.append({
+            "time_local": dt.isoformat(),
+            "intensity_kn": current.get("intensity_kn"),
+            "phase": current.get("phase"),
+            "trend": current.get("trend"),
+            "direction_true": current.get("direction_true"),
+            "method": current.get("status"),
+        })
+    return {
+        "station_id": station_id, "start": s.isoformat(), "hours": hours,
+        "interval_minutes": interval_minutes, "samples": samples,
+        "operational_notice": "Planning estimate; verify official SHOA tables and observed conditions.",
+        "null_policy": "Missing or nonstandard intervals are null, not interpolated.",
+    }
+
+
 @app.get("/sun-events")
 def sun_events(station_id: str, local_date: str):
     """Solar sunrise and sunset at the station, in its civil timezone."""
