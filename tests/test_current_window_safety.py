@@ -1,5 +1,6 @@
 """Additional safety regression checks for ESTOA current-window provenance."""
 import unittest
+from unittest.mock import patch
 import pandas as pd
 from integrated_services import _nearest_minutes, weak_windows, weak_windows_diagnostics, WEAK
 from app import EVENTS
@@ -7,16 +8,16 @@ from app import EVENTS
 
 class CurrentWindowSafetyTests(unittest.TestCase):
     def test_midpoint_ties_are_not_silently_guessed(self):
-        # Choose a real pair of adjacent tabulated maximum intensities.
-        for (_, threshold, case), group in WEAK.groupby(["table", "threshold_kn", "case"]):
-            values = sorted(set(float(x) for x in group.max_intensity_kn))
-            if len(values) < 2:
-                continue
-            table = str(group.iloc[0]["table"])
-            midpoint = (values[0] + values[1]) / 2
-            self.assertIsNone(_nearest_minutes(table, midpoint, threshold, case))
-            return
-        self.fail("No table has two adjacent maximum intensities")
+        # Synthetic fixture avoids floating-point midpoint ambiguity in source CSV.
+        table = pd.DataFrame([
+            {"table": "T", "threshold_kn": 1.0, "case": "i",
+             "max_intensity_kn": 2.0, "minutes": 60},
+            {"table": "T", "threshold_kn": 1.0, "case": "i",
+             "max_intensity_kn": 4.0, "minutes": 30},
+        ])
+        with patch("integrated_services.WEAK", table):
+            self.assertIsNone(_nearest_minutes("T", 3.0, 1.0, "i"))
+            self.assertEqual(_nearest_minutes("T", 2.0, 1.0, "i"), 60)
 
     def test_diagnostics_reject_nonfinite_threshold(self):
         with self.assertRaises(ValueError):
