@@ -32,3 +32,12 @@ jobs:
           python-version: '3.11'
       - run: pip install -r requirements.txt
       - run: python -c 'from app import timezone_qa; import json; print(json.dumps(timezone_qa(),indent=2),flush=True)'
+  production-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify deployed API and frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-delay 10 --max-time 90 --silent --show-error https://estoa-api.onrender.com/health | python3 -c 'import json,sys; r=json.load(sys.stdin); print(r); assert r["status"]=="ok"'
+          curl --fail --location --retry 4 --retry-delay 10 --max-time 90 --silent --show-error https://estoa-web.onrender.com/ | grep -qi '<html'
