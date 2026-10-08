@@ -98,17 +98,19 @@ def weak_windows(station_id,start,hours=24,threshold=1.0):
     # Preserve source-level intervals; report overlap explicitly rather than
     # silently merging distinct SHOA cases or implying independent windows.
     out.sort(key=lambda w: (w["start"], w["end"]))
-    for i, window in enumerate(out):
-        window["overlaps_previous"] = (
-            i > 0 and pd.Timestamp(window["start"]) < pd.Timestamp(out[i-1]["end"])
-        )
+    furthest_end = None
+    for window in out:
+        lo, hi = pd.Timestamp(window["start"]), pd.Timestamp(window["end"])
+        window["overlaps_previous"] = bool(furthest_end is not None and lo < furthest_end)
+        furthest_end = hi if furthest_end is None else max(furthest_end, hi)
     return out
 
 def weak_windows_diagnostics(station_id, start, hours=24, threshold=1.0):
     """Return explicit availability and overlap diagnostics without inventing data."""
     if station_id not in set(METHODS.station_id):
         raise ValueError("Unknown current station")
-    if not (0 <= float(threshold) <= 10) or not (1 <= int(hours) <= 168):
+    import math
+    if not math.isfinite(float(threshold)) or not (0 <= float(threshold) <= 10) or not (1 <= hours <= 168):
         raise ValueError("Invalid query range")
     windows = weak_windows(station_id, start, hours, threshold)
     method = ("PUB3015_EMPIRICAL_TABLE"
