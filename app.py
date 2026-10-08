@@ -159,7 +159,12 @@ def forecast(station_id:str, start:datetime, hours:int=24):
 @app.get("/weak-windows")
 def weak_windows_endpoint(station_id:str, start:datetime, hours:int=24, threshold_kn:float=1.0):
     from integrated_services import weak_windows
+    import math
     station_row(station_id)
+    if not math.isfinite(threshold_kn) or not 0 <= threshold_kn <= 10:
+        raise HTTPException(status_code=422,detail="threshold_kn must be between 0 and 10 knots")
+    if not 1 <= hours <= 168:
+        raise HTTPException(status_code=422,detail="hours must be between 1 and 168")
     return {"station_id":station_id,"threshold_kn":threshold_kn,"windows":weak_windows(station_id,start,hours,threshold_kn)}
 
 @app.get("/capabilities")
