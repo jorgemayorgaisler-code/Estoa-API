@@ -85,8 +85,13 @@ def weak_windows(station_id,start,hours=24,threshold=1.0):
         after=_nearest_minutes(mr.weak_current_table,float(b.intensity_kn),threshold,case)
         if before is None or after is None: continue
         ws=c-pd.Timedelta(minutes=before); we=c+pd.Timedelta(minutes=after)
-        if we>=s and ws<=e:
-            out.append({"start":ws.isoformat(),"end":we.isoformat(),"center":c.isoformat(),
+        if we>s and ws<e:
+            # Query bounds are applied consistently to empirical and model windows.
+            # Preserve the untrimmed SHOA-derived interval for auditing.
+            clipped_start=max(ws,s); clipped_end=min(we,e)
+            if clipped_end<=clipped_start: continue
+            out.append({"start":clipped_start.isoformat(),"end":clipped_end.isoformat(),
+                        "full_start":ws.isoformat(),"full_end":we.isoformat(),"center":c.isoformat(),
                         "threshold_kn":threshold,"table":mr.weak_current_table,"case":case,
                         "method":"PUB3015_EMPIRICAL_TABLE",
                         "source":"PUB3015_2026_WEAK_CURRENT_TABLE_"+str(mr.weak_current_table)})
