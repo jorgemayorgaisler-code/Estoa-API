@@ -21,7 +21,7 @@ small,.muted{color:#afc6d1}.legend{display:flex;gap:20px;flex-wrap:wrap}
 <section><div id="status" role="status"></div><div id="error" role="alert"></div>
 <svg id="chart" viewBox="0 0 900 330" role="img" aria-label="Curva de intensidad de corriente y límite seleccionado"></svg>
 <div class="legend"><small>— Corriente calculada / evento publicado</small><small>-- Límite configurable</small><small>● Evento de estoa</small></div>
-<p class="muted" id="notes"></p></section>
+<p class="muted" id="window-status"></p><p class="muted" id="notes"></p></section>
 <p class="muted">Herramienta de planificación. Verificar tablas oficiales SHOA, condiciones observadas y publicaciones vigentes. Las curvas entre eventos son estimaciones del modelo ESTOA, no valores tabulados SHOA.</p>
 </main><script>
 const API = new URLSearchParams(location.search).get('api') || 'https://estoa-api.onrender.com';
@@ -29,10 +29,19 @@ const $=id=>document.getElementById(id);
 function el(name,attrs){const e=document.createElementNS('http://www.w3.org/2000/svg',name);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,String(v));return e}
 function line(svg,x1,y1,x2,y2,color,dash){svg.append(el('line',{x1,y1,x2,y2,stroke:color,'stroke-width':1.5,...(dash?{'stroke-dasharray':'7 5'}:{})}))}
 function label(svg,x,y,value){const t=el('text',{x,y,fill:'#c5d9e2','font-size':13});t.textContent=value;svg.append(t)}
-function render(data,limit){
+function render(data,limit,windowData){
  const svg=$('chart');svg.replaceChildren();const s=data.samples||[];if(!s.length){$('status').textContent='Sin muestras';return}
  const W=900,H=330,L=56,R=20,T=25,B=45;const max=Math.max(1,limit,...s.map(p=>Number.isFinite(p.intensity_kn)?Math.abs(p.intensity_kn):0))*1.12;
  const x=i=>L+(W-L-R)*i/Math.max(1,s.length-1),y=v=>H-B-(H-T-B)*v/max;
+ const first=Date.parse(s[0].time_local),last=Date.parse(s[s.length-1].time_local);
+ if(windowData&&last>first){for(const w of windowData.windows||[]){
+  const a=Date.parse(w.start),b=Date.parse(w.end);
+  if(!Number.isFinite(a)||!Number.isFinite(b)||b<=a)continue;
+  const x1=L+(W-L-R)*Math.max(0,Math.min(1,(a-first)/(last-first)));
+  const x2=L+(W-L-R)*Math.max(0,Math.min(1,(b-first)/(last-first)));
+  if(x2>x1)svg.append(el('rect',{x:x1,y:T,width:x2-x1,height:H-T-B,fill:'#338e80','fill-opacity':'.18'}));
+ }}
+
  for(let i=0;i<=4;i++){const val=max*i/4;line(svg,L,y(val),W-R,y(val),'#294858');label(svg,5,y(val)+4,val.toFixed(1))}
  line(svg,L,H-B,W-R,H-B,'#7294a4');line(svg,L,T,L,H-B,'#7294a4');
  line(svg,L,y(limit),W-R,y(limit),'#f2c66c',true);label(svg,W-115,Math.max(15,y(limit)-7),'Límite '+limit+' kn');
@@ -50,8 +59,16 @@ async function load(){
  const limit=Number($('limit').value),hours=Number($('hours').value);
  if(!Number.isFinite(limit)||limit<0||limit>10||!Number.isInteger(hours)||hours<1||hours>168){$('error').textContent='Límite entre 0 y 10 nudos y período entre 1 y 168 horas.';return}
  const params=new URLSearchParams({station_id:$('station').value,start:$('start').value+':00',hours:String(hours),interval_minutes:'30'});
- try{const res=await fetch(API+'/current-curve?'+params);if(!res.ok)throw Error('HTTP '+res.status);(window.lastCurve=await res.json(),render(window.lastCurve,limit))}
+ try{
+ const wp=new URLSearchParams({station_id:$('station').value,start:$('start').value+':00',hours:String(hours),threshold_kn:String(limit)});
+ const [curveRes,windowRes]=await Promise.all([fetch(API+'/current-curve?'+params),fetch(API+'/weak-windows?'+wp)]);
+ if(!curveRes.ok)throw Error('Curva HTTP '+curveRes.status);
+ window.lastCurve=await curveRes.json();window.lastWindows=null;
+ if(windowRes.ok){window.lastWindows=await windowRes.json();$('window-status').textContent=(window.lastWindows.windows||[]).length+' ventanas de corriente débil. Sombreado orientativo, no autorización de paso.'}
+ else $('window-status').textContent='Ventanas no disponibles (HTTP '+windowRes.status+').';
+ render(window.lastCurve,limit,window.lastWindows);
+}
  catch(e){$('status').textContent='No disponible';$('error').textContent='No se pudo consultar /current-curve. El servicio podría estar pendiente de despliegue. '+e.message}
 }
-$('load').addEventListener('click',load);$('limit').addEventListener('input',()=>{if(window.lastCurve)render(window.lastCurve,Number($('limit').value))});
+$('load').addEventListener('click',load);$('limit').addEventListener('input',()=>{if(window.lastCurve)load()});
 </script></body></html>
