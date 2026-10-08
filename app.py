@@ -259,6 +259,35 @@ def all_qa():
             "kirke":k,"current_events":cur,"interpolation":interp,
             "tide":{"pass":tide_pass,"status":tide_status,"report":tide},"timezones":tz}
 
+@app.get("/qa/kirke-table-d-integrity")
+def qa_kirke_table_d_integrity():
+    """Structural checks of all digitized Table D cells; not source-by-source verification."""
+    from integrated_services import WEAK
+    d=WEAK[WEAK.table=="D"].copy()
+    expected_thresholds={0.1,0.3,0.5,0.8,1.0}
+    keys=["max_intensity_kn","threshold_kn","case"]
+    duplicates=int(d.duplicated(subset=keys).sum())
+    bad_thresholds=int((~d.threshold_kn.isin(expected_thresholds)).sum())
+    bad_minutes=int((d.minutes.isna()|(d.minutes<=0)).sum())
+    bad_cases=int((d.case!="i").sum())
+    bad_maxima=int((d.max_intensity_kn<0.4).sum()+(d.max_intensity_kn>7.5).sum())
+    violations=[]
+    for maximum,group in d.groupby("max_intensity_kn"):
+        group=group.sort_values("threshold_kn")
+        vals=group.minutes.tolist()
+        if any(vals[i]>vals[i+1] for i in range(len(vals)-1)):
+            violations.append(float(maximum))
+    return {"source":"DIGITIZED_PUB3015_2026_TABLE_D",
+            "station_id":"CUR011","cells":int(len(d)),
+            "expected_cells":169,"duplicate_keys":duplicates,
+            "invalid_thresholds":bad_thresholds,"invalid_minutes":bad_minutes,
+            "invalid_cases":bad_cases,"out_of_range_maxima":bad_maxima,
+            "nonmonotonic_rows":violations,
+            "pass":len(d)==169 and duplicates==0 and bad_thresholds==0
+                   and bad_minutes==0 and bad_cases==0 and bad_maxima==0
+                   and not violations,
+            "independent_shoa_cell_by_cell_verified":False}
+
 @app.get("/qa/kirke-table-d")
 def qa_kirke_table_d():
     """Spot-check independently transcribed PUB3015 2026 p.162 Table D.
