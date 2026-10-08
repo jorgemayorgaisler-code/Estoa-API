@@ -259,6 +259,35 @@ def all_qa():
             "kirke":k,"current_events":cur,"interpolation":interp,
             "tide":{"pass":tide_pass,"status":tide_status,"report":tide},"timezones":tz}
 
+@app.get("/qa/kirke-table-d")
+def qa_kirke_table_d():
+    """Spot-check independently transcribed PUB3015 2026 p.162 Table D.
+    Source cells are published minutes, not model-derived estimates.
+    """
+    from integrated_services import WEAK
+    reference=[
+        (0.4,0.1,10),(0.4,0.3,36),
+        (0.5,0.1,10),(0.5,0.3,35),(0.5,0.5,81),
+        (0.8,0.1,7),(0.8,0.3,23),(0.8,0.5,41),(0.8,0.8,96),
+        (1.0,0.1,6),(1.0,0.3,19),(1.0,0.5,34),(1.0,0.8,64),(1.0,1.0,107),
+        (2.0,0.1,4),(2.0,0.3,12),(2.0,0.5,21),(2.0,0.8,35),(2.0,1.0,45),
+        (3.0,0.1,3),(3.0,0.3,9),(3.0,0.5,15),(3.0,0.8,25),(3.0,1.0,32),
+        (5.0,0.1,2),(5.0,0.3,7),(5.0,0.5,12),(5.0,0.8,19),(5.0,1.0,24),
+        (7.5,0.1,1),(7.5,0.3,5),(7.5,0.5,9),(7.5,0.8,15),(7.5,1.0,18),
+    ]
+    checks=[]
+    for maximum,threshold,expected in reference:
+        rows=WEAK[(WEAK.table=="D")&(WEAK.case=="i")&
+                  ((WEAK.max_intensity_kn-maximum).abs()<1e-6)&
+                  ((WEAK.threshold_kn-threshold).abs()<1e-6)]
+        actual=int(rows.iloc[0].minutes) if len(rows)==1 else None
+        checks.append({"maximum_kn":maximum,"threshold_kn":threshold,
+                       "expected_minutes":expected,"actual_minutes":actual,
+                       "pass":actual==expected})
+    return {"source":"PUB3015_2026_P162_TABLE_D","station_id":"CUR011",
+            "reference_cells":len(checks),"pass":all(x["pass"] for x in checks),
+            "independent_source_spot_check":True,"checks":checks}
+
 @app.get("/qa/kirke-thresholds")
 def qa_kirke_thresholds():
     """Check modeled weak-current windows against independent instant() samples.
