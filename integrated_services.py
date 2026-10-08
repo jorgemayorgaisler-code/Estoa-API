@@ -95,7 +95,46 @@ def weak_windows(station_id,start,hours=24,threshold=1.0):
                         "threshold_kn":threshold,"table":mr.weak_current_table,"case":case,
                         "method":"PUB3015_EMPIRICAL_TABLE",
                         "source":"PUB3015_2026_WEAK_CURRENT_TABLE_"+str(mr.weak_current_table)})
+    # Preserve source-level intervals; report overlap explicitly rather than
+    # silently merging distinct SHOA cases or implying independent windows.
+    out.sort(key=lambda w: (w["start"], w["end"]))
+    furthest_end = None
+    for window in out:
+        lo, hi = pd.Timestamp(window["start"]), pd.Timestamp(window["end"])
+        window["overlaps_previous"] = bool(furthest_end is not None and lo < furthest_end)
+        furthest_end = hi if furthest_end is None else max(furthest_end, hi)
     return out
+
+def weak_windows_diagnostics(station_id, start, hours=24, threshold=1.0):
+    """Return explicit availability and overlap diagnostics without inventing data."""
+    if station_id not in set(METHODS.station_id):
+        raise ValueError("Unknown current station")
+    import math
+    if not math.isfinite(float(threshold)) or not (0 <= float(threshold) <= 10) or not (1 <= hours <= 168):
+        raise ValueError("Invalid query range")
+    windows = weak_windows(station_id, start, hours, threshold)
+    registry_row = METHODS[METHODS.station_id == station_id].iloc[0]
+    empirical_thresholds = {
+        float(value) for value in str(registry_row.empirical_thresholds_kn).split(",")
+        if value.strip()
+    }
+    # Provenance describes the selected calculation path, even when no windows
+    # were produced (e.g. insufficient events or an unresolved table lookup).
+    method = ("PUB3015_EMPIRICAL_TABLE"
+              if any(abs(float(threshold) - value) < 1e-6 for value in empirical_thresholds)
+              else "CALCULATED_CONTINUOUS")
+    return {
+        "station_id": station_id, "threshold_kn": float(threshold),
+        "method": method, "windows": windows,
+        "overlap_count": sum(bool(w.get("overlaps_previous")) for w in windows),
+        "has_windows": bool(windows),
+        "empty_result_note": (
+            None if windows else
+            "No windows returned. This does not establish that no navigable period exists; "
+            "table lookup gaps and event coverage must be reviewed."
+        ),
+        "operational_notice": "Planning estimate only; verify official SHOA data and observed conditions."
+    }
 
 def tide_capability(station_id):
     r=REG[REG.station_id==station_id].iloc[0]

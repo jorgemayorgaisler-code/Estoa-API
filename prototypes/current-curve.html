@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ESTOA | Corrientes</title>
+<style>
+:root{font-family:system-ui,Arial,sans-serif;color:#e7f2f6;background:#071b29}
+body{margin:0;padding:24px}main{max-width:980px;margin:auto}h1{letter-spacing:.13em}
+section{background:#102c3c;border:1px solid #345064;border-radius:16px;padding:18px;margin:16px 0}
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:end}label{display:grid;gap:6px;font-size:.9rem}
+input,select,button{background:#19394b;color:white;border:1px solid #52788a;border-radius:8px;padding:9px}
+button{cursor:pointer;background:#24718c}svg{width:100%;height:auto;display:block}
+small,.muted{color:#afc6d1}
+.table-scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:640px}th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #345064}th{color:#b6dce7}td{font-variant-numeric:tabular-nums} .warning{color:#ffd08b}.legend{display:flex;gap:20px;flex-wrap:wrap}
+#error{color:#ffb6a8}#status{min-height:1.5em}
+</style></head><body><main><h1>ESTOA</h1><p>Corrientes de marea · gráfico exploratorio</p>
+<section class="controls">
+<label>Estación<select id="station"><option value="CUR011">Angostura Kirke (CUR011)</option></select></label>
+<label>Inicio local<input id="start" type="datetime-local" value="2026-10-07T00:00"></label>
+<label>Horas<input id="hours" type="number" min="1" max="168" value="24"></label>
+<label>Límite (nudos)<input id="limit" type="number" min="0" max="10" step="0.1" value="2.5"></label>
+<label>Hora a consultar<input id="moment" type="datetime-local" value="2026-10-07T18:30"></label><button id="load">Actualizar gráfico</button>
+</section>
+<section><div id="status" role="status"></div><div id="error" role="alert"></div>
+<svg id="chart" viewBox="0 0 900 330" role="img" aria-label="Curva de intensidad de corriente y límite seleccionado"></svg>
+<div class="legend"><small>— Corriente calculada / evento publicado</small><small>-- Límite configurable</small><small>● Evento de estoa</small></div>
+<p id="next-slack" role="status">Próxima estoa: consulta pendiente.</p><p id="moment-status" role="status">Selecciona una hora y actualiza el gráfico.</p><p class="muted" id="window-status"></p><p class="muted" id="notes"></p></section>
+<section><h2>Marea en la hora seleccionada</h2><p id="tide-status">Consulta pendiente.</p><p class="muted">Altura y tendencia únicamente cuando el motor de mareas dispone de datos. No se extrapolan alturas para estaciones sin capacidad.</p></section>
+<section><h2>Ventanas de corriente débil</h2><p class="muted">Horas civiles de la estación. La duración corresponde al intervalo mostrado, que puede estar recortado por el período consultado.</p>
+<div class="table-scroll"><table><thead><tr><th>Inicio</th><th>Término</th><th>Duración</th><th>Método</th><th>Observación</th></tr></thead><tbody id="window-rows"><tr><td colspan="5">Consulta un período para ver las ventanas.</td></tr></tbody></table></div></section>
+<p class="muted">Herramienta de planificación. Verificar tablas oficiales SHOA, condiciones observadas y publicaciones vigentes. Las curvas entre eventos son estimaciones del modelo ESTOA, no valores tabulados SHOA.</p>
+</main><script>
+const API = new URLSearchParams(location.search).get('api') || 'https://estoa-api.onrender.com';
+const $=id=>document.getElementById(id);
+// Compare station-local civil timestamps without applying the viewer's timezone.
+function civilMs(value){
+ if(typeof value!=='string')return NaN;
+ const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(value);
+ if(!m)return NaN;
+ const [year,month,day,hour,minute,second]=m.slice(1).map(Number);
+ const stamp=Date.UTC(year,month-1,day,hour,minute,second||0);
+ const d=new Date(stamp);
+ return d.getUTCFullYear()===year&&d.getUTCMonth()===month-1&&d.getUTCDate()===day&&d.getUTCHours()===hour&&d.getUTCMinutes()===minute?stamp:NaN;
+}
+
+function el(name,attrs){const e=document.createElementNS('http://www.w3.org/2000/svg',name);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,String(v));return e}
+function line(svg,x1,y1,x2,y2,color,dash){svg.append(el('line',{x1,y1,x2,y2,stroke:color,'stroke-width':1.5,...(dash?{'stroke-dasharray':'7 5'}:{})}))}
+function label(svg,x,y,value){const t=el('text',{x,y,fill:'#c5d9e2','font-size':13});t.textContent=value;svg.append(t)}
+function render(data,limit,windowData){
+ const svg=$('chart');svg.replaceChildren();const s=data.samples||[];if(!s.length){$('status').textContent='Sin muestras';return}
+ const W=900,H=330,L=56,R=20,T=25,B=45;const max=Math.max(1,limit,...s.map(p=>Number.isFinite(p.intensity_kn)?Math.abs(p.intensity_kn):0))*1.12;
+ const x=i=>L+(W-L-R)*i/Math.max(1,s.length-1),y=v=>H-B-(H-T-B)*v/max;
+ const first=civilMs(s[0].time_local),last=civilMs(s[s.length-1].time_local);
+ if(windowData&&last>first){for(const w of windowData.windows||[]){
+  const a=civilMs(w.start),b=civilMs(w.end);
+  if(!Number.isFinite(a)||!Number.isFinite(b)||b<=a)continue;
+  const x1=L+(W-L-R)*Math.max(0,Math.min(1,(a-first)/(last-first)));
+  const x2=L+(W-L-R)*Math.max(0,Math.min(1,(b-first)/(last-first)));
+  if(x2>x1)svg.append(el('rect',{x:x1,y:T,width:x2-x1,height:H-T-B,fill:'#338e80','fill-opacity':'.18'}));
+ }}
+
+ for(let i=0;i<=4;i++){const val=max*i/4;line(svg,L,y(val),W-R,y(val),'#294858');label(svg,5,y(val)+4,val.toFixed(1))}
+ line(svg,L,H-B,W-R,H-B,'#7294a4');line(svg,L,T,L,H-B,'#7294a4');
+ line(svg,L,y(limit),W-R,y(limit),'#f2c66c',true);label(svg,W-115,Math.max(15,y(limit)-7),'Límite '+limit+' kn');
+ let segment=[];function flush(){if(segment.length>1)svg.append(el('polyline',{points:segment.join(' '),fill:'none',stroke:'#6bd3dc','stroke-width':2.5,'stroke-linejoin':'round'}));segment=[]}
+ s.forEach((p,i)=>{if(p.intensity_kn===null||!Number.isFinite(Number(p.intensity_kn))){flush();return}
+ const v=Math.abs(Number(p.intensity_kn));segment.push(x(i)+','+y(v));
+ if(p.phase==='SLACK'||p.phase==='VARIABLE'){svg.append(el('circle',{cx:x(i),cy:y(v),r:4,fill:'#ffb86c'}))}
+ });flush();
+ const selected=$('moment').value;
+ const selectedMs=civilMs(selected);
+ if(Number.isFinite(selectedMs)&&selectedMs>=first&&selectedMs<=last&&last>first){
+   const selectedX=L+(W-L-R)*(selectedMs-first)/(last-first);
+   line(svg,selectedX,T,selectedX,H-B,'#f6f0c0',true);
+   const closest=s.reduce((best,p,i)=>Math.abs(civilMs(p.time_local)-selectedMs)<Math.abs(civilMs(s[best].time_local)-selectedMs)?i:best,0);
+   const sample=s[closest];
+   const exact=civilMs(sample.time_local)===selectedMs;
+   const kn=sample.intensity_kn;
+   const trend={INCREASING:'Aumentando',DECREASING:'Disminuyendo',EVENT:'Evento publicado',UNKNOWN:'Sin tendencia disponible'}[sample.trend]||'Tendencia no disponible';
+   const phase={FLOOD:'Flujo',EBB:'Reflujo',SLACK:'Estoa',VARIABLE:'Variable'}[sample.phase]||'Fase desconocida';
+   $('moment-status').textContent='Hora seleccionada: '+selected.replace('T',' ')+' · '+(exact?'Muestra exacta':'Muestra más cercana: '+sample.time_local.replace('T',' ').slice(0,16))+' · '+(kn===null?'Intensidad no disponible':Math.abs(kn).toFixed(2)+' kn')+' · '+phase+' · '+trend+' · '+(sample.method||'Método desconocido');
+ }else $('moment-status').textContent='La hora seleccionada está fuera del gráfico o no es válida.';
+ for(let i=0;i<=4;i++){const idx=Math.round((s.length-1)*i/4);label(svg,Math.max(0,x(idx)-26),H-14,(s[idx].time_local||'').slice(11,16))}
+ $('notes').textContent='Fuente por muestra: PUBLISHED_EVENT (evento tabulado) o CALCULATED_CONTINUOUS (estimación). Huecos: sin dato. Intensidades representadas en valor absoluto.';
+ $('status').textContent=s.length+' muestras · '+data.station_id+' · '+data.hours+' horas';
+}
+function renderTide(data){
+ const target=$('tide-status');
+ if(!data||!data.tide||data.tide.available===false){target.textContent='Marea no disponible para esta consulta.';return}
+ const t=data.tide,h=t.height_m;
+ const height=typeof h==='number'&&Number.isFinite(h)?h.toFixed(2)+' m':'Altura no disponible';
+ const status=t.status||t.method||'Método no informado';
+ const trend=t.trend||t.tendency||null;
+ const eventType=t.next&&t.next.type;
+ const eventLabel=trend==='EVENT'?(eventType==='HW'?'Pleamar tabulada':eventType==='LW'?'Bajamar tabulada':'Evento de marea tabulado'):null;
+ const translated={RISING:'Subiendo',FALLING:'Bajando',HIGH:'Pleamar',LOW:'Bajamar',STABLE:'Casi estacionaria'};
+ target.textContent=height+' · '+(eventLabel||translated[trend]||'Tendencia no determinada')+' · '+status;
+}
+async function loadTide(){
+ const selected=$('moment').value;
+ if(!selected){renderTide(null);return}
+ const p=new URLSearchParams({station_id:$('station').value,local_datetime:selected+':00'});
+ try{const response=await fetch(API+'/conditions/at?'+p);renderTide(response.ok?await response.json():null)}
+ catch(e){renderTide(null)}
+}
+function renderNextSlack(forecast){
+ const target=$('next-slack'),moment=civilMs($('moment').value);
+ if(!Number.isFinite(moment)){target.textContent='Próxima estoa: hora de consulta inválida.';return}
+ if(!forecast||!Array.isArray(forecast.events)){target.textContent='Próxima estoa: eventos publicados no disponibles.';return}
+ const candidates=forecast.events.filter(e=>e.event_type==='SLACK'&&Number.isFinite(civilMs(e.local_datetime))&&civilMs(e.local_datetime)>=moment).sort((a,b)=>civilMs(a.local_datetime)-civilMs(b.local_datetime));
+ if(!candidates.length){target.textContent='No hay un evento de estoa publicado posterior a la hora seleccionada dentro del período consultado. No se puede inferir su ausencia fuera de ese período.';return}
+ const next=candidates[0],minutes=Math.round((civilMs(next.local_datetime)-moment)/60000);
+ target.textContent='Próxima estoa tabulada: '+next.local_datetime.replace('T',' ').slice(0,16)+' · En '+Math.floor(minutes/60)+' h '+String(minutes%60).padStart(2,'0')+' min desde la hora seleccionada. Fuente: evento registrado PUB 3015; confirmar publicación oficial.';
+}
+function renderWindows(data){
+ const tbody=$('window-rows');tbody.replaceChildren();
+ const windows=data&&Array.isArray(data.windows)?data.windows:[];
+ if(!windows.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=5;td.textContent=data?'Sin ventanas devueltas. Esto no demuestra ausencia de un período navegable.':'Ventanas no disponibles.';tr.append(td);tbody.append(tr);return}
+ for(const w of windows){
+  const a=civilMs(w.start),b=civilMs(w.end);
+  const duration=Number.isFinite(a)&&Number.isFinite(b)&&b>a?Math.round((b-a)/60000):null;
+  const fmt=s=>typeof s==='string'?s.replace('T',' ').slice(0,16):'—';
+  const method=w.method==='PUB3015_EMPIRICAL_TABLE'?'Tabla empírica PUB 3015':w.method==='CALCULATED_CONTINUOUS'?'Modelo continuo ESTOA':'Método no identificado';
+  const notes=[w.table?'Tabla '+w.table:'',w.case?'Caso '+w.case:'',w.overlaps_previous?'Se superpone a otra ventana':'',w.full_start&&w.full_start!==w.start?'Inicio recortado':'',w.full_end&&w.full_end!==w.end?'Término recortado':''].filter(Boolean).join(' · ')||'Estimación para planificación';
+  const tr=document.createElement('tr');
+  for(const value of [fmt(w.start),fmt(w.end),duration===null?'—':Math.floor(duration/60)+' h '+String(duration%60).padStart(2,'0')+' min',method,notes]){const td=document.createElement('td');td.textContent=value;tr.append(td)}
+  tbody.append(tr);
+ }
+}
+async function load(){
+ $('error').textContent='';$('status').textContent='Consultando API…';
+ const limit=Number($('limit').value),hours=Number($('hours').value);
+ if(!Number.isFinite(limit)||limit<0||limit>10||!Number.isInteger(hours)||hours<1||hours>168){$('error').textContent='Límite entre 0 y 10 nudos y período entre 1 y 168 horas.';return}
+ const params=new URLSearchParams({station_id:$('station').value,start:$('start').value+':00',hours:String(hours),interval_minutes:'30'});
+ try{
+ const wp=new URLSearchParams({station_id:$('station').value,start:$('start').value+':00',hours:String(hours),threshold_kn:String(limit)});
+ const fp=new URLSearchParams({station_id:$('station').value,start:$('start').value+':00',hours:String(hours)});
+ const [curveRes,windowRes,forecastRes]=await Promise.all([fetch(API+'/current-curve?'+params),fetch(API+'/weak-windows?'+wp),fetch(API+'/forecast?'+fp)]);
+ if(!curveRes.ok)throw Error('Curva HTTP '+curveRes.status);
+ window.lastCurve=await curveRes.json();window.lastWindows=null;
+ if(windowRes.ok){window.lastWindows=await windowRes.json();$('window-status').textContent=(window.lastWindows.windows||[]).length+' ventanas de corriente débil. Sombreado orientativo, no autorización de paso.'}
+ else $('window-status').textContent='Ventanas no disponibles (HTTP '+windowRes.status+').';
+ window.lastForecast=forecastRes.ok?await forecastRes.json():null;
+ render(window.lastCurve,limit,window.lastWindows);renderWindows(window.lastWindows);renderNextSlack(window.lastForecast);await loadTide();
+}
+ catch(e){renderNextSlack(null);renderTide(null);renderWindows(null);$('status').textContent='No disponible';$('error').textContent='No se pudo consultar /current-curve. El servicio podría estar pendiente de despliegue. '+e.message}
+}
+$('load').addEventListener('click',load);$('limit').addEventListener('change',()=>{if(window.lastCurve)load()});
+$('moment').addEventListener('change',()=>{if(window.lastCurve){render(window.lastCurve,Number($('limit').value),window.lastWindows);renderNextSlack(window.lastForecast);loadTide()}});
+</script></body></html>
