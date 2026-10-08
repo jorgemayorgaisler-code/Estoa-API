@@ -1,7 +1,7 @@
 """Additional safety regression checks for ESTOA current-window provenance."""
 import unittest
 import pandas as pd
-from integrated_services import _nearest_minutes, weak_windows, WEAK
+from integrated_services import _nearest_minutes, weak_windows, weak_windows_diagnostics, WEAK
 from app import EVENTS
 
 
@@ -17,6 +17,15 @@ class CurrentWindowSafetyTests(unittest.TestCase):
             self.assertIsNone(_nearest_minutes(table, midpoint, threshold, case))
             return
         self.fail("No table has two adjacent maximum intensities")
+
+    def test_diagnostics_preserve_empirical_intervals(self):
+        sid = "CUR011"
+        g = EVENTS[EVENTS.station_id == sid]
+        start = pd.Timestamp(g.local_dt.min()) + pd.Timedelta(days=3)
+        result = weak_windows_diagnostics(sid, start, 24, 1.0)
+        self.assertEqual(result["windows"], weak_windows(sid, start, 24, 1.0))
+        self.assertEqual(result["overlap_count"], sum(bool(w.get("overlaps_previous")) for w in result["windows"]))
+        self.assertIn("operational_notice", result)
 
     def test_method_provenance_and_query_bounds(self):
         sid = "CUR011"
