@@ -6,9 +6,9 @@ The server-side module `payments_mercadopago.py` prepares a **monthly CLP** subs
 
 ## Required before public launch
 
-1. Confirm commercial price in CLP and whether the merchant account is eligible for recurring subscriptions.
+1. **Price confirmed by product owner: CLP 2,990 per month.** Verify the merchant account is eligible for recurring subscriptions.
 2. Create Mercado Pago developer application and obtain private access token. Store only in Render secret environment variables, never in the frontend or Git.
-3. Configure `MERCADOPAGO_ACCESS_TOKEN` and `ESTOA_PREMIUM_PRICE_CLP`.
+3. Configure `MERCADOPAGO_ACCESS_TOKEN` and `ESTOA_PREMIUM_PRICE_CLP=2990` as private Render environment variables. Do not activate the checkout until server-side entitlement verification is implemented.
 4. Implement authenticated user accounts and persistent binding of user ID to Mercado Pago `preapproval.id`. Never accept a user ID or email from an unauthenticated public checkout request.
 5. Implement authenticated backend checkout endpoint with rate limiting, CSRF protections as applicable, and idempotent handling.
 6. Register Mercado Pago webhook notifications, validate authenticity, and **fetch subscription status server-to-server** via `GET /preapproval/{id}` before changing entitlements. Handle authorized, pending, paused, canceled and failed payments; define grace-period policy.
