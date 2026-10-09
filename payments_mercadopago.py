@@ -62,3 +62,32 @@ def create_subscription(email, reference):
 def premium_eligible(subscription):
     """Only verified remote status is eligible; never trust browser redirects."""
     return bool(subscription and subscription.get("status") == "authorized")
+
+
+def fetch_subscription_status(subscription_id):
+    """Retrieve authoritative subscription status from Mercado Pago server-side."""
+    token = os.getenv("MERCADOPAGO_ACCESS_TOKEN")
+    if not token:
+        raise PaymentConfigurationError("Mercado Pago token is not configured")
+    if not isinstance(subscription_id, str) or not subscription_id or not all(
+        char.isalnum() or char in "-_" for char in subscription_id
+    ):
+        raise ValueError("Invalid subscription identifier")
+    req = Request(
+        MP_API + "/preapproval/" + subscription_id,
+        headers={"Authorization": "Bearer " + token},
+        method="GET",
+    )
+    try:
+        with urlopen(req, timeout=15) as response:
+            data = json.load(response)
+    except (HTTPError, URLError, TimeoutError) as exc:
+        raise RuntimeError("Mercado Pago subscription verification failed") from exc
+    if not isinstance(data, dict) or str(data.get("id")) != subscription_id:
+        raise RuntimeError("Mercado Pago subscription identifier mismatch")
+    return {
+        "subscription_id": subscription_id,
+        "status": data.get("status"),
+        "external_reference": data.get("external_reference"),
+        "premium_eligible": premium_eligible(data),
+    }
