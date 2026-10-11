@@ -493,3 +493,7 @@ def version():
         "current_source":"PUB3015-2026",
         "tide_source":"PUB3009-2026"
     }
+
+# Payment notifications are authenticated but do not activate access until verified.
+from mercadopago_webhook import router as mercadopago_router
+app.include_router(mercadopago_router)
