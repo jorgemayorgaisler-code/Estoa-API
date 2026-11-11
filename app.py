@@ -47,10 +47,17 @@ def instant(station_id, dt):
     if prev.empty or nxt.empty: return {"status":"OUT_OF_DATASET","intensity_kn":None,"phase":"UNKNOWN","direction_true":None,"trend":"UNKNOWN"}
     a,b=prev.iloc[-1],nxt.iloc[0]
     if "WEAK_VARIABLE" in (a.event_type,b.event_type):
-        return {"status":"WEAK_VARIABLE","intensity_kn":None,"phase":"VARIABLE","direction_true":None,"trend":"UNKNOWN"}
+        # A weak/variable event is not a measured zero-current instant.
+        return {"status":"WEAK_VARIABLE","intensity_kn":None,"phase":"VARIABLE",
+                "direction_true":None,"trend":"UNKNOWN",
+                "reason":"PUB3015_WEAK_VARIABLE_NO_INSTANTANEOUS_SPEED",
+                "message":"Corriente debil o variable segun SHOA; no hay velocidad instantanea fiable para este intervalo."}
     standard=(a.event_type=="SLACK" and b.event_type in MAX_TYPES) or (a.event_type in MAX_TYPES and b.event_type=="SLACK")
     if not standard:
-        return {"status":"NONSTANDARD_NO_VALUE","intensity_kn":None,"phase":"UNKNOWN","direction_true":None,"trend":"UNKNOWN"}
+        return {"status":"NONSTANDARD_NO_VALUE","intensity_kn":None,"phase":"UNKNOWN",
+                "direction_true":None,"trend":"UNKNOWN",
+                "reason":"NONSTANDARD_EVENT_SEQUENCE",
+                "message":"Secuencia no estandar: consulte los eventos SHOA publicados."}
     dur=(b.local_dt-a.local_dt).total_seconds()
     f=(t-a.local_dt).total_seconds()/dur
     if a.event_type=="SLACK":
@@ -136,6 +143,27 @@ def stations():
     df=REG[cols].copy().astype(object)
     df=df.where(pd.notna(df),None)
     return df.to_dict("records")
+
+@app.get("/current/diagnostic")
+def current_diagnostic(station_id: str, local_datetime: datetime):
+    """Explain unavailable instantaneous currents with surrounding source events."""
+    station_row(station_id)
+    t = pd.Timestamp(local_datetime.replace(tzinfo=None))
+    g = EVENTS[EVENTS.station_id == station_id].sort_values("local_dt")
+    before = g[g.local_dt <= t].tail(1)
+    after = g[g.local_dt > t].head(1)
+    def serialize(frame):
+        if frame.empty: return None
+        e = frame.iloc[0]
+        return {"local_datetime":e.local_dt.isoformat(),
+                "event_type":e.event_type,
+                "intensity_kn":None if pd.isna(e.intensity_kn) else float(e.intensity_kn),
+                "direction_true":None if pd.isna(e.direction_true) else float(e.direction_true)}
+    return {"station_id":station_id, "local_datetime":t.isoformat(),
+            "current":instant(station_id,local_datetime),
+            "previous_event":serialize(before), "next_event":serialize(after),
+            "source":"PUB3015_2026",
+            "notice":"Los intervalos no estandar no se interpolan automaticamente."}
 
 @app.get("/conditions/at")
 def conditions_at(station_id:str, local_datetime:datetime):
