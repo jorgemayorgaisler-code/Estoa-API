@@ -37,6 +37,12 @@ class CurrentSafetyTests(unittest.TestCase):
                 r=self.query(self.sample(v),"2026-11-27T00:00")
                 self.assertIsNone(r["intensity_kn"])
                 self.assertEqual(r["status"],"INVALID_SOURCE_VALUE")
+    def test_exact_invalid_maxima(self):
+        for v in (None,float("nan"),float("inf"),-1):
+            with self.subTest(v=v):
+                r=self.query(self.sample(v),"2026-11-27T02:00")
+                self.assertIsNone(r["intensity_kn"])
+                self.assertEqual(r["status"],"INVALID_SOURCE_VALUE")
     def test_outside_coverage(self):
         self.assertIsNone(self.query(self.sample(),"2026-11-27T03:00")["intensity_kn"])
     def test_weak_variable_gap(self):
