@@ -1,11 +1,13 @@
 import React, {useState,useEffect} from "react";
 import "./AccountPanel.css";
 
-export default function AccountPanel({apiBase, stations=[]}) {
+export default function AccountPanel({apiBase, stations=[], sessionToken, onSessionChange}) {
   const [mode,setMode]=useState("login");
   const [email,setEmail]=useState("");
   const [password,setPassword]=useState("");
-  const [token,setToken]=useState("");
+  const [localToken,setLocalToken]=useState("");
+  const token=sessionToken??localToken;
+  const setToken=onSessionChange??setLocalToken;
   const [trial,setTrial]=useState(null);
   const [status,setStatus]=useState(null);
   const [now,setNow]=useState(Date.now());
@@ -15,7 +17,7 @@ export default function AccountPanel({apiBase, stations=[]}) {
   const [consent,setConsent]=useState(false);
   async function request(path,body,method="POST"){
     const response=await fetch(apiBase.replace(/\/$/,"")+"/accounts/"+path,{
-      method,headers:{"Content-Type":"application/json",...(token?{Authorization:"Bearer "+token}:{})},
+      method,cache:"no-store",redirect:"error",headers:{"Content-Type":"application/json",...(token?{Authorization:"Bearer "+token}:{})},
       ...(body?{body:JSON.stringify(body)}:{})
     });
     if(!response.ok) throw Error(response.status===429?"Demasiados intentos. Intenta más tarde.":"No se pudo completar la solicitud.");
@@ -54,7 +56,7 @@ export default function AccountPanel({apiBase, stations=[]}) {
     </form>:<>
       <label>Estación gratuita<select value={station} onChange={e=>setStation(e.target.value)}><option value="">Seleccionar</option>{stations.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
       <button disabled={busy||!station} onClick={()=>run(async()=>{await request("me/free-station",{station_id:station});setStatus(await request("me",null,"GET"));setMessage("Estación seleccionada.")})}>Confirmar estación permanente</button>
-      <button disabled={busy} onClick={()=>run(async()=>{await request("logout");setToken("");setTrial(null);setConsent(false);setStation("");setStatus(null)})}>Cerrar sesión</button>
+      <button disabled={busy} onClick={()=>run(async()=>{try{await request("logout")}finally{setToken("");setTrial(null);setConsent(false);setStation("");setStatus(null)}})}>Cerrar sesión</button>
     </>}
     <article className="estoa-premium"><h3>ESTOA Premium</h3><strong>Primer mes gratis</strong><p>$990 CLP al mes después, si decides suscribirte.</p><p>Todas las estaciones. Sin cobro automático.</p>
       {token&&<button disabled={busy||!!trial||!!status?.activated_at} onClick={()=>run(async()=>{setTrial(await request("me/trial"));setStatus(await request("me",null,"GET"))})}>Activar mes gratuito</button>}
