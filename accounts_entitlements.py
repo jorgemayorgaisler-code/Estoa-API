@@ -19,7 +19,7 @@ def allowed_stations(account_id, valid_station_ids):
     with connection() as conn:
         row=conn.execute("""SELECT a.id, f.station_id,
             EXISTS (SELECT 1 FROM subscriptions s WHERE s.account_id=a.id
-            AND s.status='authorized' AND s.access_until>now()) AS premium
+            AND s.status='authorized' AND s.access_until>now()) OR EXISTS (SELECT 1 FROM premium_trials t WHERE t.account_id=a.id AND t.activated_at<=now() AND t.expires_at>now()) AS premium
             FROM accounts a LEFT JOIN free_station_entitlements f ON f.account_id=a.id
             WHERE a.id=%s AND a.disabled_at IS NULL AND a.email_verified_at IS NOT NULL""",(account_id,)).fetchone()
     if not row:
@@ -29,3 +29,15 @@ def allowed_stations(account_id, valid_station_ids):
 def require_station(account_id, station_id, valid_station_ids):
     if station_id not in allowed_stations(account_id,valid_station_ids):
         raise PermissionError("Station not included in account")
+
+
+def activate_trial(account_id):
+    """Activate once, atomically; repeated calls return original expiry."""
+    with connection() as conn:
+        account = conn.execute("SELECT id FROM accounts WHERE id=%s AND disabled_at IS NULL AND email_verified_at IS NOT NULL FOR UPDATE", (account_id,)).fetchone()
+        if not account:
+            raise PermissionError("Account unavailable")
+        conn.execute("""INSERT INTO premium_trials (account_id,activated_at,expires_at)
+            VALUES (%s,now(),((now() AT TIME ZONE 'America/Santiago') + interval '1 month') AT TIME ZONE 'America/Santiago')
+            ON CONFLICT (account_id) DO NOTHING""", (account_id,))
+        return conn.execute("SELECT activated_at,expires_at,expires_at>now() AS active FROM premium_trials WHERE account_id=%s", (account_id,)).fetchone()
