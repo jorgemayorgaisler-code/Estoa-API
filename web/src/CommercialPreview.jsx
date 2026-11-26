@@ -1,7 +1,7 @@
 import React,{useState,useCallback} from "react";
 import AccountPanel from "./AccountPanel.jsx";
 import PrivateNavigation from "./PrivateNavigation.jsx";
-import usePrivateCatalog from "./usePrivateCatalog.js";
+import {usePrivateCatalog} from "./usePrivateCatalog.js";
 
 export default function CommercialPreview(){
   const [token,setToken]=useState("");
