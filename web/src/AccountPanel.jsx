@@ -21,6 +21,7 @@ export default function AccountPanel({apiBase, stations=[], sessionToken, onSess
       method,cache:"no-store",redirect:"error",headers:{"Content-Type":"application/json",...(token?{Authorization:"Bearer "+token}:{})},
       ...(body?{body:JSON.stringify(body)}:{})
     });
+    if(response.status===401&&token){setToken("");setStatus(null);setTrial(null);setConsent(false);throw Error("Sesión vencida. Inicia sesión nuevamente.");}
     if(!response.ok) throw Error(response.status===429?"Demasiados intentos. Intenta más tarde.":"No se pudo completar la solicitud.");
     return response.status===204?null:response.json();
   }
@@ -29,13 +30,13 @@ export default function AccountPanel({apiBase, stations=[], sessionToken, onSess
     let cancelled=false;
     const refresh=async()=>{
       try{const data=await request("me",null,"GET");if(!cancelled)setStatus(data)}
-      catch(e){if(!cancelled)setMessage(e.message)}
+      catch(e){if(!cancelled){setStatus(null);setMessage(e.message)}}
     };
     refresh();
     const timer=setInterval(()=>{setNow(Date.now());refresh()},60000);
     return ()=>{cancelled=true;clearInterval(timer)};
-  },[token]);
-  const expiry=status?.expires_at||trial?.expires_at;
+  },[token,apiBase]);
+  const expiry=status?.expires_at;
   const days=expiry?Math.max(0,Math.ceil((Date.parse(expiry)-now)/86400000)):0;
   async function run(fn){
     setBusy(true);setMessage("");
@@ -62,7 +63,7 @@ export default function AccountPanel({apiBase, stations=[], sessionToken, onSess
     {!token&&import.meta.env.VITE_EMAIL_PREVIEW==="true"&&<EmailPanel apiBase={apiBase}/>}
     <article className="estoa-premium"><h3>ESTOA Premium</h3><strong>Primer mes gratis</strong><p>$990 CLP al mes después, si decides suscribirte.</p><p>Todas las estaciones. El mes gratuito no genera cobros automáticos.</p>
       {token&&<button disabled={busy||!!trial||!!status?.activated_at||!status} onClick={()=>run(async()=>{setTrial(await request("me/trial"));setStatus(await request("me",null,"GET"))})}>Activar mes gratuito</button>}
-      {token&&status?.plan==="free"&&import.meta.env.VITE_PAYMENT_PREVIEW==="true"&&<><label><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/>Acepto contratar Premium por $990 CLP mensuales mediante Mercado Pago.</label><button disabled={busy||!consent} onClick={()=>run(async()=>{const data=await request("me/checkout",{consent:true});const url=new URL(data.checkout_url);if(url.protocol!=="https:"||!["www.mercadopago.cl","www.mercadopago.com","www.mercadopago.com.ar"].includes(url.hostname))throw Error("Enlace de pago inválido");window.location.assign(url.href)})}>Contratar Premium</button></>}
+      {token&&status?.plan==="free"&&import.meta.env.VITE_PAYMENT_PREVIEW==="true"&&<><label><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/>Acepto contratar Premium por $990 CLP mensuales mediante Mercado Pago.</label><button disabled={busy||!consent} onClick={()=>run(async()=>{const data=await request("me/checkout",{consent:true});const url=new URL(data.checkout_url);if(url.protocol!=="https:"||!["www.mercadopago.cl","www.mercadopago.com","www.mercadopago.com.ar"].includes(url.hostname)||url.username||url.password||url.port)throw Error("Enlace de pago inválido");window.location.assign(url.href)})}>Contratar Premium</button></>}
       {status&&<p>Plan vigente: {status.plan==="premium"?"Premium":"Free"}</p>}
       {expiry&&<p>{days>0?"Periodo gratuito: "+days+" días restantes. ":"Periodo gratuito finalizado. "}Vencimiento: {new Date(expiry).toLocaleString("es-CL",{timeZone:"America/Santiago"})}</p>}
     </article>
