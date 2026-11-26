@@ -60,5 +60,24 @@ class TideSafetyTests(unittest.TestCase):
             with self.subTest(types=types,heights=heights):
                 self.assertIsNone(self.query(types,heights)["height_m"])
 
+class SolarSafetyTests(unittest.TestCase):
+    def test_magallanes_solar_events(self):
+        from types import SimpleNamespace
+        from datetime import timedelta
+        with patch.object(app,"station_row",return_value=SimpleNamespace(latitude=-51.73,longitude=-72.51,timezone_id="America/Punta_Arenas")):
+            for day in ("2026-06-21","2026-12-21"):
+                result=app.sun_events("TEST",day)
+                self.assertEqual(result["status"],"CALCULATED_ASTRONOMICAL")
+                rise=datetime.fromisoformat(result["sunrise"])
+                setting=datetime.fromisoformat(result["sunset"])
+                self.assertEqual(rise.utcoffset(),timedelta(hours=-3))
+                self.assertEqual(rise.date().isoformat(),day)
+                self.assertEqual(setting.date().isoformat(),day)
+                self.assertLess(rise,setting)
+    def test_missing_coordinates(self):
+        from types import SimpleNamespace
+        with patch.object(app,"station_row",return_value=SimpleNamespace(latitude=None,longitude=None)):
+            self.assertEqual(app.sun_events("TEST","2026-11-26")["status"],"NO_COORDINATES")
+
 if __name__=="__main__":
     unittest.main()
