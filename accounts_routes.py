@@ -1,7 +1,7 @@
 """Account API. Mount only after email verification and rate limits are ready."""
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StrictBool
 from accounts_rate_limits import allow_attempt
 import accounts_store as store
 import accounts_entitlements as ent
@@ -26,7 +26,7 @@ def build_router(valid_station_ids):
 
     def throttle(policy, identifier):
         if not allow_attempt(policy, identifier):
-            raise HTTPException(429, "Too many requests")
+            raise HTTPException(429, "Too many requests", headers={"Retry-After":str(3600 if policy=="register_ip" else 900)})
 
     def client_key(request):
         return request.client.host if request.client else "unknown"
@@ -83,7 +83,7 @@ def build_router(valid_station_ids):
             raise HTTPException(403,"Account unavailable")
 
     class CheckoutConsent(BaseModel):
-        consent: bool
+        consent: StrictBool
 
     @router.post("/me/checkout")
     def checkout(body: CheckoutConsent, account_id=Depends(identity)):
