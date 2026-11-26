@@ -78,4 +78,9 @@ for day in ["2026-05-31","2026-06-30","2026-07-31","2026-10-31"]:
     end=start+pd.Timedelta(hours=12)
     rows=EVENTS[(EVENTS.station_id=="CUR010") & (EVENTS.source_dt>=start) & (EVENTS.source_dt<=end)].sort_values("source_dt")
     report["white_boundary_context"].append({"day":day,"events":rows[["source_dt","event_type","intensity_kn","direction_true"]].astype(str).to_dict("records")})
+report["mackinlay_source_review"]=[]
+for day,hhmm in [("2026-01-31","2304"),("2026-03-31","2310")]:
+    stamp=pd.Timestamp(day+" "+hhmm[:2]+":"+hhmm[2:])
+    rows=EVENTS[(EVENTS.station_id=="CUR021") & (EVENTS.source_dt==stamp)]
+    report["mackinlay_source_review"].append(dict(source_time=str(stamp),expected_type="SLACK",actual=rows[["event_type","intensity_kn","direction_true"]].fillna("").to_dict("records")))
 print(json.dumps(report,ensure_ascii=False,indent=2,allow_nan=False))
