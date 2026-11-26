@@ -138,6 +138,10 @@ class PublishedStationTests(unittest.TestCase):
         import integrated_services
         with patch.object(integrated_services,"EVENTS",frame):
             self.assertEqual(integrated_services._model_threshold_windows("TEST",datetime(2026,11,26,23),24,2.5),[])
+    def test_inglesa_restored_slack(self):
+        r=app.instant("CUR009",datetime.fromisoformat("2026-08-31T22:01"))
+        self.assertEqual(r["event_type"],"SLACK")
+        self.assertEqual(r["intensity_kn"],0)
     def test_mackinlay_restored_slacks(self):
         for stamp in ["2026-02-01T00:04","2026-04-01T00:10"]:
             r=app.instant("CUR021",datetime.fromisoformat(stamp))
