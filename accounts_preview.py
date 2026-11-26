@@ -49,3 +49,7 @@ async def no_private_cache(request,call_next):
 if os.environ.get("ESTOA_EMAIL_PREVIEW")=="true":
     from accounts_email_routes import build_email_router
     app.include_router(build_email_router())
+
+if os.environ.get("ESTOA_WEBHOOK_PREVIEW")=="true" and os.environ.get("ESTOA_MP_MODE")=="sandbox":
+    from accounts_webhook_routes import build_webhook_router
+    app.include_router(build_webhook_router())
