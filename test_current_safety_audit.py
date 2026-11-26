@@ -44,5 +44,21 @@ class CurrentSafetyTests(unittest.TestCase):
         frame.loc[1,"event_type"]="WEAK_VARIABLE"
         self.assertIsNone(self.query(frame,"2026-11-27T00:00")["intensity_kn"])
 
+class TideSafetyTests(unittest.TestCase):
+    def query(self, types, heights):
+        import tide_engine
+        frame=pd.DataFrame([
+            dict(station_id="TEST",local_dt=pd.Timestamp("2026-11-26 00:00"),type=types[0],height_m=heights[0]),
+            dict(station_id="TEST",local_dt=pd.Timestamp("2026-11-26 06:00"),type=types[1],height_m=heights[1])])
+        with patch.object(tide_engine,"TIDES",frame):
+            return tide_engine.tide_at("TEST",datetime(2026,11,26,3))
+    def test_valid_tides(self):
+        for types, heights in [(("LW","HW"),(0,4)),(("HW","LW"),(4,0))]:
+            self.assertAlmostEqual(self.query(types,heights)["height_m"],2)
+    def test_invalid_tides(self):
+        for types, heights in [(("HW","HW"),(2,4)),(("LW","LW"),(1,2)),(("LW","HW"),(4,1)),(("HW","LW"),(1,4)),(("LW","HW"),(0,float("inf"))), (("LW","HW"),(None,4))]:
+            with self.subTest(types=types,heights=heights):
+                self.assertIsNone(self.query(types,heights)["height_m"])
+
 if __name__=="__main__":
     unittest.main()
