@@ -122,6 +122,18 @@ class PublishedStationTests(unittest.TestCase):
             self.assertIsNotNone(result["next_event"])
             tested+=1
         self.assertGreater(tested,0)
+    def test_long_gap_blocks_interpolation(self):
+        g=app.EVENTS[app.EVENTS.station_id=="CUR007"].sort_values("local_dt").reset_index(drop=True)
+        gaps=g.local_dt.diff().dt.total_seconds()/3600
+        tested=0
+        for i in gaps[gaps>12].index:
+            a,b=g.iloc[i-1],g.iloc[i]
+            midpoint=a.local_dt+(b.local_dt-a.local_dt)/2
+            result=app.instant("CUR007",midpoint.to_pydatetime())
+            self.assertIsNone(result["intensity_kn"])
+            self.assertEqual(result["status"],"SOURCE_GAP_REVIEW_REQUIRED")
+            tested+=1
+        self.assertGreater(tested,0)
     def test_long_gap_report(self):
         for sid in ("CUR007","CUR021"):
             g=app.EVENTS[app.EVENTS.station_id==sid].sort_values("local_dt").reset_index(drop=True)
