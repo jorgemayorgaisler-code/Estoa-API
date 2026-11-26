@@ -1,5 +1,5 @@
 # ESTOA accounts and subscriptions
-Free accounts select one station; Premium accounts access all stations. Price: CLP 2990/month.
+Free accounts select one station; Premium accounts access all stations. Launch price: CLP 990/month. Reference regular price: CLP 2990/month. Launch offer duration and renewal pricing remain undecided; do not automatically increase existing subscriptions or activate billing until terms are confirmed.
 Keep existing public API unchanged until integration clients and migration are verified.
 Use persistent PostgreSQL, unique normalized email, verified email before activation, Argon2id password hashes or managed identity, expiring revocable sessions, rate limits and password reset.
 Enforce station entitlement server-side on every calculation and map endpoint; never rely on frontend hiding. Preserve a separate authenticated integration API policy.
