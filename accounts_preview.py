@@ -30,6 +30,22 @@ def private_stations(auth: HTTPAuthorizationCredentials=Depends(bearer)):
     return [dict(s, included=s["station_id"] in allowed) for s in stations()]
 
 import os
+from urllib.parse import urlsplit
+from fastapi.middleware.cors import CORSMiddleware
+origin=os.environ.get("ESTOA_PREVIEW_ORIGIN","")
+if origin:
+    parsed=urlsplit(origin)
+    if parsed.scheme!="https" or not parsed.hostname or parsed.username or parsed.password or parsed.path or parsed.query or parsed.fragment or "*" in origin:
+        raise RuntimeError("Invalid preview origin")
+    app.add_middleware(CORSMiddleware,allow_origins=[origin],allow_methods=["GET","POST"],allow_headers=["Authorization","Content-Type"],allow_credentials=False)
+
+@app.middleware("http")
+async def no_private_cache(request,call_next):
+    response=await call_next(request)
+    if request.url.path.startswith(("/private/","/accounts/")):
+        response.headers["Cache-Control"]="no-store"
+    return response
+
 if os.environ.get("ESTOA_EMAIL_PREVIEW")=="true":
     from accounts_email_routes import build_email_router
     app.include_router(build_email_router())
