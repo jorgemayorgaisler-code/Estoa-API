@@ -17,6 +17,9 @@ class VerifiedPeriodTests(unittest.TestCase):
             conn.execute("INSERT INTO accounts(id,email,password_hash,email_verified_at) VALUES (%s,%s,'test',now())",(aid,str(aid)+"@example.test"))
             conn.execute("INSERT INTO subscriptions(provider_id,account_id,status,amount_clp) VALUES (%s,%s,'authorized',990)",(pid,aid))
         try:
+            late=str(uuid.uuid4())
+            self.assertIsNone(revoke_verified_payment(pid,late,"refunded"))
+            self.assertIsNone(record_verified_period(pid,late,990,start,end))
             self.assertEqual(record_verified_period(pid,payment,990,start,end),end)
             self.assertEqual(record_verified_period(pid,payment,990,start,end),end)
             with self.assertRaises(ValueError):
@@ -30,6 +33,7 @@ class VerifiedPeriodTests(unittest.TestCase):
             self.assertIsNone(revoke_verified_payment(pid,payment,"charged_back"))
         finally:
             with connection() as conn:
+                conn.execute("DELETE FROM payment_revocations WHERE provider_id=%s",(pid,))
                 conn.execute("DELETE FROM subscription_payments WHERE provider_id=%s",(pid,))
                 conn.execute("DELETE FROM subscriptions WHERE provider_id=%s",(pid,))
                 conn.execute("DELETE FROM accounts WHERE id=%s",(aid,))
