@@ -5,13 +5,20 @@ export function usePrivateCatalog(base,token,onExpired){
  useEffect(()=>{
   setResult(null);
   if(!token)return;
-  const controller=new AbortController();
-  let active=true;
-  Promise.resolve().then(()=>createPrivateApi(base,token,()=>{if(active)onExpired()})("/stations",{}, {signal:controller.signal})).then(stations=>{
-   if(!Array.isArray(stations))throw Error("Catálogo inválido");
-   if(active)setResult({token,base,stations});
-  }).catch(e=>{if(active)setResult({token,base,error:e.message})});
-  return ()=>{active=false;controller.abort()};
+  let active=true,controller=null;
+  const refresh=()=>{
+   controller?.abort();
+   const current=new AbortController();controller=current;
+   Promise.resolve().then(()=>createPrivateApi(base,token,()=>{if(active&&!current.signal.aborted)onExpired()})("/stations",{},{signal:current.signal})).then(stations=>{
+    if(!Array.isArray(stations))throw Error("Catálogo inválido");
+    if(active&&!current.signal.aborted)setResult({token,base,stations});
+   }).catch(e=>{if(active&&!current.signal.aborted)setResult({token,base,error:e.message})});
+  };
+  refresh();
+  const timer=setInterval(refresh,30000);
+  const visible=()=>{if(document.visibilityState==="visible")refresh()};
+  document.addEventListener("visibilitychange",visible);
+  return ()=>{active=false;controller?.abort();clearInterval(timer);document.removeEventListener("visibilitychange",visible)};
  },[base,token,onExpired]);
  return result?.token===token&&result?.base===base?result:null;
 }
