@@ -41,3 +41,17 @@ def activate_trial(account_id):
             VALUES (%s,now(),((now() AT TIME ZONE 'America/Santiago') + interval '1 month') AT TIME ZONE 'America/Santiago')
             ON CONFLICT (account_id) DO NOTHING""", (account_id,))
         return conn.execute("SELECT activated_at,expires_at,expires_at>now() AS active FROM premium_trials WHERE account_id=%s", (account_id,)).fetchone()
+
+
+def account_status(account_id):
+    with connection() as conn:
+        row=conn.execute("""SELECT f.station_id, t.activated_at, t.expires_at,
+            COALESCE(t.expires_at>now() AND t.activated_at<=now(),false) AS trial_active,
+            EXISTS (SELECT 1 FROM subscriptions s WHERE s.account_id=a.id
+            AND s.status='authorized' AND s.access_until>now()) AS paid_active
+            FROM accounts a LEFT JOIN free_station_entitlements f ON f.account_id=a.id
+            LEFT JOIN premium_trials t ON t.account_id=a.id
+            WHERE a.id=%s AND a.disabled_at IS NULL AND a.email_verified_at IS NOT NULL""",(account_id,)).fetchone()
+        if not row:
+            raise PermissionError("Account unavailable")
+        return dict(row, plan="premium" if row["trial_active"] or row["paid_active"] else "free")
