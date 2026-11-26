@@ -28,3 +28,8 @@ def private_stations(auth: HTTPAuthorizationCredentials=Depends(bearer)):
         raise HTTPException(401,"Authentication required")
     allowed=allowed_stations(account_id,valid)
     return [dict(s, included=s["station_id"] in allowed) for s in stations()]
+
+import os
+if os.environ.get("ESTOA_EMAIL_PREVIEW")=="true":
+    from accounts_email_routes import build_email_router
+    app.include_router(build_email_router())
