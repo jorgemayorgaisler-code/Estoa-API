@@ -67,4 +67,9 @@ for day,hhmm,kind,kn in [("2026-08-31","2123","SLACK",0),("2026-08-31","2206","M
     stamp=pd.Timestamp(day+" "+hhmm[:2]+":"+hhmm[2:])
     rows=EVENTS[(EVENTS.station_id=="CUR007") & (EVENTS.source_dt==stamp)]
     report["quesahuen_additional_source_review"].append(dict(source_time=str(stamp),expected_type=kind,expected_kn=kn,actual=rows[["event_type","intensity_kn","direction_true"]].fillna("").to_dict("records")))
+report["white_source_review"]=[]
+for day,hhmm in [("2026-01-31","2107"),("2026-03-31","2154")]:
+    stamp=pd.Timestamp(day+" "+hhmm[:2]+":"+hhmm[2:])
+    rows=EVENTS[(EVENTS.station_id=="CUR010") & (EVENTS.source_dt==stamp)]
+    report["white_source_review"].append(dict(source_time=str(stamp),expected_type="SLACK",actual=rows[["event_type","intensity_kn","direction_true"]].fillna("").to_dict("records")))
 print(json.dumps(report,ensure_ascii=False,indent=2,allow_nan=False))
