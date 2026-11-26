@@ -13,7 +13,7 @@ assert 'navigator.serviceWorker.register' in html
 assert re.search(r"const CACHE='estoa-v\d+'", sw)
 assert "e.request.mode==='navigate'" in sw
 assert "cache:'no-store'" in sw
-assert "u.hostname==='estoa-api.onrender.com'" in sw
+assert "u.origin!==self.location.origin" in sw
 assert "const fetchWithTimeout=" in app
 assert "fetchWithTimeout(API+'/conditions/at?" in app
 assert "setMomentData(a);setLoading(false)" in app
