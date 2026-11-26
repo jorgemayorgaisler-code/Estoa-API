@@ -26,6 +26,11 @@ for day,hhmm,kind,kn,direction,page in [
     ("2026-03-31","1613","MAX_EBB",4.1,32,48),
     ("2026-03-31","1902","SLACK",0,None,48),
     ("2026-03-31","2303","MAX_FLOOD",2.6,192,48),
+    ("2026-08-31","2123","SLACK",0,None,50),
+    ("2026-08-31","2206","MAX_FLOOD",1.0,192,50),
+    ("2026-08-31","2303","MAX_FLOOD",0.4,192,50),
+    ("2026-10-31","1926","SLACK",0,None,51),
+    ("2026-10-31","2141","MAX_EBB",3.1,32,51),
 ]:
     stamp=pd.Timestamp(day+" "+hhmm[:2]+":"+hhmm[2:])
     existing=EVENTS[(EVENTS.station_id=="CUR007") & (EVENTS.source_dt==stamp)]
