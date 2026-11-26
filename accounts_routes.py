@@ -1,7 +1,8 @@
 """Account API. Mount only after email verification and rate limits are ready."""
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
+from accounts_rate_limits import allow_attempt
 import accounts_store as store
 import accounts_entitlements as ent
 
@@ -23,8 +24,16 @@ def build_router(valid_station_ids):
             raise HTTPException(401, "Authentication required", headers={"WWW-Authenticate":"Bearer"})
         return account_id
 
+    def throttle(policy, identifier):
+        if not allow_attempt(policy, identifier):
+            raise HTTPException(429, "Too many requests")
+
+    def client_key(request):
+        return request.client.host if request.client else "unknown"
+
     @router.post("/register", status_code=202)
-    def register(body: Credentials):
+    def register(body: Credentials, request: Request):
+        throttle("register_ip", client_key(request))
         try:
             store.register(body.email, body.password)
         except ValueError:
@@ -32,7 +41,9 @@ def build_router(valid_station_ids):
         return {"status":"verification_required"}
 
     @router.post("/login")
-    def login(body: Credentials):
+    def login(body: Credentials, request: Request):
+        throttle("login_ip", client_key(request))
+        throttle("login_email", body.email)
         result = store.login(body.email, body.password)
         if not result:
             raise HTTPException(401, "Invalid credentials or account unavailable")
