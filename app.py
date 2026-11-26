@@ -215,6 +215,8 @@ def conditions_now(station_id:str):
 
 @app.get("/forecast")
 def forecast(station_id:str, start:datetime, hours:int=24):
+    if not 1 <= hours <= 168:
+        raise HTTPException(422,"hours must be between 1 and 168")
     station_row(station_id)
     s=pd.Timestamp(station_local_datetime(station_id,start)); e=s+pd.Timedelta(hours=hours)
     g=EVENTS[(EVENTS.station_id==station_id)&(EVENTS.local_dt>=s)&(EVENTS.local_dt<=e)].copy()
@@ -252,7 +254,13 @@ def tide_qa():
 def tide_events(station_id: str, start_local: str, hours: int = 24):
     import pandas as pd
     from tide_engine import TIDES
-    start=pd.Timestamp(start_local)
+    station_row(station_id)
+    if not 1 <= hours <= 168:
+        raise HTTPException(422,"hours must be between 1 and 168")
+    try:
+        start=pd.Timestamp(station_local_datetime(station_id,datetime.fromisoformat(start_local)))
+    except (ValueError, OverflowError):
+        raise HTTPException(422,"Invalid start_local datetime")
     end=start+pd.Timedelta(hours=hours)
     g=TIDES[(TIDES.station_id==station_id)&(TIDES.local_dt>=start)&(TIDES.local_dt<=end)].sort_values("local_dt")
     events=[]
