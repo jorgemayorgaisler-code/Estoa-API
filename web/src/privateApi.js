@@ -1,4 +1,4 @@
-const allowed=new Set(["/tide-curve","/current-curve","/sun-events","/current/diagnostic","/conditions/at","/conditions/now","/forecast","/weak-windows","/capabilities","/tide-events","/conditions/map"]);
+const allowed=new Set(["/stations","/tide-curve","/current-curve","/sun-events","/current/diagnostic","/conditions/at","/conditions/now","/forecast","/weak-windows","/capabilities","/tide-events","/conditions/map"]);
 export function createPrivateApi(base,token){
   const origin=new URL(base);
   if(origin.protocol!=="https:"||origin.username||origin.password||origin.search||origin.hash||origin.pathname!=="/")throw Error("Servidor privado inválido");
