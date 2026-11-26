@@ -75,4 +75,11 @@ def build_router(valid_station_ids):
         except PermissionError:
             raise HTTPException(403,"Account unavailable")
 
+    @router.get("/me")
+    def me(account_id=Depends(identity)):
+        try:
+            return ent.account_status(account_id)
+        except PermissionError:
+            raise HTTPException(403,"Account unavailable")
+
     return router
