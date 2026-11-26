@@ -23,6 +23,8 @@ class VerifiedPeriodTests(unittest.TestCase):
                 record_verified_period(pid,str(uuid.uuid4()),990,start,end)
             with self.assertRaises(ValueError):
                 record_verified_period(pid,payment,990,start,end+timedelta(days=1))
+            with self.assertRaises(ValueError):
+                record_verified_period(pid,str(uuid.uuid4()),990,start+timedelta(days=2),end+timedelta(days=2))
             self.assertIsNone(revoke_verified_payment(pid,payment,"refunded"))
             self.assertIsNone(record_verified_period(pid,payment,990,start,end))
             self.assertIsNone(revoke_verified_payment(pid,payment,"charged_back"))
