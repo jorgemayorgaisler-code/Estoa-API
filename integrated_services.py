@@ -34,11 +34,11 @@ def _model_threshold_windows(station_id, start, hours, threshold):
         maximum=b if a.event_type=="SLACK" else a
         if pd.isna(maximum.intensity_kn):
             continue
-        speed=abs(float(maximum.intensity_kn))
-        if speed<=0:
+        speed=float(maximum.intensity_kn)
+        if not math.isfinite(speed) or speed<=0:
             continue
         duration=b.local_dt-a.local_dt
-        if duration<=pd.Timedelta(0):
+        if duration<=pd.Timedelta(0) or duration>pd.Timedelta(hours=12):
             continue
         ratio=min(1.0,threshold/speed)
         if a.event_type=="SLACK":
