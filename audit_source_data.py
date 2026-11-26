@@ -40,4 +40,11 @@ report={
 for station,g in pd.DataFrame({"station":events.station_id,"time":dt}).groupby("station"):
     t=g.time.dropna().sort_values()
     report["coverage_by_station"][str(station)]={"first":str(t.min()),"last":str(t.max()),"events":len(g),"largest_gap_hours":float(t.diff().max().total_seconds()/3600) if len(t)>1 else None}
+# Targeted source comparison: PUB3015 2026 pp. 47–48.
+reference=[("2026-01-31","1429","SLACK",0),("2026-01-31","1606","MAX_EBB",4.1),("2026-01-31","1810","SLACK",0),("2026-01-31","2241","MAX_FLOOD",2.8),("2026-03-31","1440","SLACK",0),("2026-03-31","1613","MAX_EBB",4.1),("2026-03-31","1902","SLACK",0),("2026-03-31","2303","MAX_FLOOD",2.6)]
+report["quesahuen_source_comparison"]=[]
+for day,hhmm,kind,kn in reference:
+    stamp=pd.Timestamp(day+" "+hhmm[:2]+":"+hhmm[2:])
+    rows=events.loc[(events.station_id=="CUR007") & (dt==stamp)]
+    report["quesahuen_source_comparison"].append({"source_datetime":str(stamp),"expected_type":kind,"expected_kn":kn,"matching_timestamp_count":len(rows),"actual":rows[["event_type","intensity_kn","direction_true"]].fillna("").to_dict("records")})
 print(json.dumps(report,ensure_ascii=False,indent=2,allow_nan=False))
