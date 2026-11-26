@@ -1,11 +1,17 @@
 """Internal Mercado Pago client. Not exposed or enabled in production."""
 import json
 import os
-from urllib.request import Request, urlopen
+from urllib.request import Request, build_opener, HTTPRedirectHandler
+from urllib.error import HTTPError
+from urllib.parse import urlsplit
 from urllib.parse import quote
 
 LAUNCH_PRICE_CLP = 990
 BASE = "https://api.mercadopago.com"
+
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise HTTPError(req.full_url,code,"Provider redirect rejected",headers,fp)
 
 def provider_request(path, payload=None):
     token=os.environ.get("ESTOA_MP_TEST_ACCESS_TOKEN","")
@@ -14,13 +20,20 @@ def provider_request(path, payload=None):
     req=Request(BASE+path, data=json.dumps(payload).encode() if payload is not None else None,
                 headers={"Authorization":"Bearer "+token,"Content-Type":"application/json"},
                 method="POST" if payload is not None else "GET")
-    with urlopen(req,timeout=15) as response:
-        return json.load(response)
+    with build_opener(NoRedirect()).open(req,timeout=15) as response:
+        raw=response.read(1048577)
+        if len(raw)>1048576:
+            raise ValueError("Provider response too large")
+        result=json.loads(raw)
+        if not isinstance(result,dict):
+            raise ValueError("Invalid provider response")
+        return result
 
 def create_pending_subscription(account_id, verified_email):
     """Caller must verify eligibility, consent and prevent duplicate creation."""
     back_url=os.environ.get("ESTOA_MP_BACK_URL","")
-    if not back_url.startswith("https://"):
+    parsed=urlsplit(back_url)
+    if parsed.scheme!="https" or not parsed.hostname or parsed.username or parsed.password or parsed.fragment:
         raise RuntimeError("HTTPS return URL required")
     return provider_request("/preapproval", {
         "reason":"ESTOA Premium",
