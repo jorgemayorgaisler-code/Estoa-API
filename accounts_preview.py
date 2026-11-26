@@ -56,3 +56,11 @@ if os.environ.get("ESTOA_EMAIL_PREVIEW")=="true":
 if os.environ.get("ESTOA_WEBHOOK_PREVIEW")=="true" and os.environ.get("ESTOA_MP_MODE")=="sandbox":
     from accounts_webhook_routes import build_webhook_router
     app.include_router(build_webhook_router())
+
+@app.get("/ready")
+def readiness():
+    from accounts_readiness import database_ready
+    if not database_ready():
+        raise HTTPException(503,"Preview not ready",headers={"Cache-Control":"no-store"})
+    from fastapi.responses import JSONResponse
+    return JSONResponse({"status":"ready"},headers={"Cache-Control":"no-store"})
