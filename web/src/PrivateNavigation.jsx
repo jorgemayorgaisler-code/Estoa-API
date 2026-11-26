@@ -9,13 +9,16 @@ function duration(start,end){
 }
 export default function PrivateNavigation({base,token,onExpired}){
  const catalog=usePrivateCatalog(base,token,onExpired);
- const [sid,setSid]=useState(""),[mode,setMode]=useState("now"),[moment,setMoment]=useState(""),[result,setResult]=useState(null),[error,setError]=useState("");
+ const [sid,setSid]=useState(""),[mode,setMode]=useState("now"),[moment,setMoment]=useState(""),[rawResult,setResult]=useState(null),[error,setError]=useState("");
  const [query,setQuery]=useState(null),[threshold,setThreshold]=useState("1");
- useEffect(()=>{setResult(null);setError("");if(!query||!token)return;
+ const permitted=!!catalog?.stations?.some(s=>s.station_id===sid&&s.included);
+ const result=permitted?rawResult:null;
+ useEffect(()=>{if(!permitted){setQuery(null);setResult(null)}},[permitted]);
+ useEffect(()=>{setResult(null);setError("");if(!query||!token||!permitted)return;
  const controller=new AbortController();let active=true;
  Promise.resolve().then(()=>createPrivateApi(base,token,()=>{if(active)onExpired()})(query.path,query.params,{signal:controller.signal})).then(data=>{if(active)setResult(data)}).catch(e=>{if(active)setError(e.message)});
  return()=>{active=false;controller.abort()};
- },[query,base,token,onExpired]);
+ },[query,base,token,onExpired,permitted]);
  const included=catalog?.stations?.filter(s=>s.included)||[];
  return <section className="page"><h3>Navegación privada · pruebas</h3>{catalog?.error&&<p>{catalog.error}</p>}
  <label>Estación<select value={sid} onChange={e=>{setSid(e.target.value);setQuery(null);setResult(null)}}><option value="">Seleccionar</option>{catalog?.stations?.map(s=><option key={s.station_id} value={s.station_id} disabled={!s.included}>{s.station_name}{s.included?"":" · Premium"}</option>)}</select></label>
