@@ -62,4 +62,9 @@ for sid,g in EVENTS.groupby("station_id"):
         hours=(b.source_dt-a.source_dt).total_seconds()/3600
         if a.source_dt.month!=b.source_dt.month and hours>4:
             report["month_boundary_review_candidates"].append(dict(station_id=str(sid),before=str(a.source_dt),after=str(b.source_dt),before_type=str(a.event_type),after_type=str(b.event_type),gap_hours=round(hours,3)))
+report["quesahuen_additional_source_review"]=[]
+for day,hhmm,kind,kn in [("2026-08-31","2123","SLACK",0),("2026-08-31","2206","MAX_FLOOD",1.0),("2026-08-31","2303","MAX_FLOOD",0.4),("2026-10-31","1926","SLACK",0),("2026-10-31","2141","MAX_EBB",3.1)]:
+    stamp=pd.Timestamp(day+" "+hhmm[:2]+":"+hhmm[2:])
+    rows=EVENTS[(EVENTS.station_id=="CUR007") & (EVENTS.source_dt==stamp)]
+    report["quesahuen_additional_source_review"].append(dict(source_time=str(stamp),expected_type=kind,expected_kn=kn,actual=rows[["event_type","intensity_kn","direction_true"]].fillna("").to_dict("records")))
 print(json.dumps(report,ensure_ascii=False,indent=2,allow_nan=False))
