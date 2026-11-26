@@ -1,0 +1,4 @@
+# Infrastructure decision
+Render workspace inspection found no PostgreSQL instances. Options: isolated Render PostgreSQL, external managed PostgreSQL with TLS, or local/CI PostgreSQL for development only. Pricing, retention, backups and connection limits must be confirmed before selecting a provider. Do not provision paid resources without approval.
+Preview configuration: ESTOA_DATABASE_URL, ESTOA_RATE_LIMIT_SECRET, ESTOA_PREVIEW_ORIGIN; frontend VITE_COMMERCIAL_PREVIEW=true and explicit private HTTPS origin. Email and payment flags remain disabled. Validate proxy trust before enabling IP throttling publicly. Never log tokens, DSNs or provider secrets.
+Release gates: run all migrations, verify backups and restore, verify session revocation and strict consent, verify real sandbox contract and SMTP delivery, resolve public API migration and future-period activation.
