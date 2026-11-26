@@ -79,5 +79,30 @@ class SolarSafetyTests(unittest.TestCase):
         with patch.object(app,"station_row",return_value=SimpleNamespace(latitude=None,longitude=None)):
             self.assertEqual(app.sun_events("TEST","2026-11-26")["status"],"NO_COORDINATES")
 
+class EndpointSafetyTests(unittest.TestCase):
+    def test_invalid_horizons(self):
+        from fastapi import HTTPException
+        with patch.object(app,"station_row"):
+            for endpoint,start in [(app.forecast,datetime(2026,11,26)),(app.tide_events,"2026-11-26T00:00")]:
+                for hours in (-1,0,169,1000000):
+                    with self.subTest(endpoint=endpoint.__name__,hours=hours):
+                        with self.assertRaises(HTTPException) as caught:
+                            endpoint("TEST",start,hours)
+                        self.assertEqual(caught.exception.status_code,422)
+    def test_invalid_tide_date(self):
+        from fastapi import HTTPException
+        with patch.object(app,"station_row"):
+            with self.assertRaises(HTTPException) as caught:
+                app.tide_events("TEST","not-a-date",24)
+            self.assertEqual(caught.exception.status_code,422)
+    def test_tide_events_timezone(self):
+        from types import SimpleNamespace
+        import tide_engine
+        frame=pd.DataFrame([dict(station_id="TEST",local_dt=pd.Timestamp("2026-11-26 09:00"),type="HW",height_m=2.0)])
+        with patch.object(app,"station_row",return_value=SimpleNamespace(timezone_id="America/Punta_Arenas")),patch.object(tide_engine,"TIDES",frame):
+            result=app.tide_events("TEST","2026-11-26T12:00:00+00:00",1)
+            self.assertEqual(result["start_local"],"2026-11-26T09:00:00")
+            self.assertEqual(len(result["events"]),1)
+
 if __name__=="__main__":
     unittest.main()
