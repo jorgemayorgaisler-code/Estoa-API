@@ -18,7 +18,9 @@ jobs:
         run: python -m unittest -v test_current_safety_audit
       - name: Audit source data
         if: always()
-        run: python audit_source_data.py > source-audit.json
+        run: |
+          python audit_source_data.py > source-audit.json
+          cat source-audit.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
