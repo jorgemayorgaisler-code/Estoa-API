@@ -26,11 +26,14 @@ def register(email, password):
             (account_id,email,encoded)).fetchone()
     return row["id"] if row else None
 
+_DUMMY_HASH = hash_password(uuid.uuid4().hex)
+
 def login(email, password):
     with connection() as conn:
         row = conn.execute("SELECT id,password_hash,email_verified_at,disabled_at FROM accounts WHERE email=%s FOR UPDATE",
                            (email.strip().lower(),)).fetchone()
-        if not row or not verify_password(password,row["password_hash"]) or not row["email_verified_at"] or row["disabled_at"]:
+        verified = verify_password(password,row["password_hash"] if row else _DUMMY_HASH)
+        if not row or not verified or not row["email_verified_at"] or row["disabled_at"]:
             return None
         token,digest,expires = new_session()
         conn.execute("INSERT INTO account_sessions (token_hash,account_id,expires_at) VALUES (%s,%s,%s)",
