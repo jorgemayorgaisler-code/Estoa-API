@@ -47,7 +47,7 @@ export default function AccountPanel({apiBase, stations=[], sessionToken, onSess
       const data=await request(mode,{email,password});
       setPassword("");
       if(mode==="login")setToken(data.access_token);
-      else setMessage("Revisa tu correo para verificar tu cuenta.");
+      else setMessage("Cuenta solicitada. Usa la sección de verificación de correo para solicitar tu código.");
     })}}>
       <h3>{mode==="login"?"Iniciar sesión":"Crear cuenta"}</h3>
       <label>Correo electrónico<input type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)}/></label>
@@ -55,13 +55,13 @@ export default function AccountPanel({apiBase, stations=[], sessionToken, onSess
       <button disabled={busy}>{mode==="login"?"Ingresar":"Registrarme"}</button>
       <button type="button" disabled={busy} onClick={()=>{setMode(mode==="login"?"register":"login");setPassword("");setMessage("")}}>{mode==="login"?"Crear cuenta":"Ya tengo cuenta"}</button>
     </form>:<>
-      <label>Estación gratuita<select value={station} onChange={e=>setStation(e.target.value)}><option value="">Seleccionar</option>{stations.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
-      <button disabled={busy||!station} onClick={()=>run(async()=>{await request("me/free-station",{station_id:station});setStatus(await request("me",null,"GET"));setMessage("Estación seleccionada.")})}>Confirmar estación permanente</button>
+      {status?.station_id?<p>Estación gratuita permanente: {stations.find(s=>s.id===status.station_id)?.name||status.station_id}</p>:<><label>Estación gratuita<select value={station} onChange={e=>setStation(e.target.value)}><option value="">Seleccionar</option>{stations.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+      <button disabled={busy||!station||!status} onClick={()=>run(async()=>{await request("me/free-station",{station_id:station});setStatus(await request("me",null,"GET"));setMessage("Estación seleccionada.")})}>Confirmar estación permanente</button></>}
       <button disabled={busy} onClick={()=>run(async()=>{try{await request("logout")}finally{setToken("");setTrial(null);setConsent(false);setStation("");setStatus(null)}})}>Cerrar sesión</button>
     </>}
     {!token&&import.meta.env.VITE_EMAIL_PREVIEW==="true"&&<EmailPanel apiBase={apiBase}/>}
-    <article className="estoa-premium"><h3>ESTOA Premium</h3><strong>Primer mes gratis</strong><p>$990 CLP al mes después, si decides suscribirte.</p><p>Todas las estaciones. Sin cobro automático.</p>
-      {token&&<button disabled={busy||!!trial||!!status?.activated_at} onClick={()=>run(async()=>{setTrial(await request("me/trial"));setStatus(await request("me",null,"GET"))})}>Activar mes gratuito</button>}
+    <article className="estoa-premium"><h3>ESTOA Premium</h3><strong>Primer mes gratis</strong><p>$990 CLP al mes después, si decides suscribirte.</p><p>Todas las estaciones. El mes gratuito no genera cobros automáticos.</p>
+      {token&&<button disabled={busy||!!trial||!!status?.activated_at||!status} onClick={()=>run(async()=>{setTrial(await request("me/trial"));setStatus(await request("me",null,"GET"))})}>Activar mes gratuito</button>}
       {token&&status?.plan==="free"&&import.meta.env.VITE_PAYMENT_PREVIEW==="true"&&<><label><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/>Acepto contratar Premium por $990 CLP mensuales mediante Mercado Pago.</label><button disabled={busy||!consent} onClick={()=>run(async()=>{const data=await request("me/checkout",{consent:true});const url=new URL(data.checkout_url);if(url.protocol!=="https:"||!["www.mercadopago.cl","www.mercadopago.com","www.mercadopago.com.ar"].includes(url.hostname))throw Error("Enlace de pago inválido");window.location.assign(url.href)})}>Contratar Premium</button></>}
       {status&&<p>Plan vigente: {status.plan==="premium"?"Premium":"Free"}</p>}
       {expiry&&<p>{days>0?"Periodo gratuito: "+days+" días restantes. ":"Periodo gratuito finalizado. "}Vencimiento: {new Date(expiry).toLocaleString("es-CL",{timeZone:"America/Santiago"})}</p>}
