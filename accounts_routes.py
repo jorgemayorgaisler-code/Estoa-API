@@ -82,4 +82,20 @@ def build_router(valid_station_ids):
         except PermissionError:
             raise HTTPException(403,"Account unavailable")
 
+    class CheckoutConsent(BaseModel):
+        consent: bool
+
+    @router.post("/me/checkout")
+    def checkout(body: CheckoutConsent, account_id=Depends(identity)):
+        import os
+        from accounts_checkout import start_checkout
+        if os.environ.get("ESTOA_MP_MODE") != "sandbox" or os.environ.get("ESTOA_CHECKOUT_PREVIEW") != "true":
+            raise HTTPException(503,"Checkout unavailable")
+        try:
+            return start_checkout(account_id,body.consent)
+        except PermissionError:
+            raise HTTPException(409,"Checkout unavailable or consent required")
+        except Exception:
+            raise HTTPException(503,"Checkout requires reconciliation")
+
     return router
