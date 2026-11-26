@@ -129,17 +129,27 @@ class PublishedStationTests(unittest.TestCase):
             tested+=1
         self.assertGreater(tested,0)
     def test_long_gap_blocks_interpolation(self):
-        g=app.EVENTS[app.EVENTS.station_id=="CUR007"].sort_values("local_dt").reset_index(drop=True)
-        gaps=g.local_dt.diff().dt.total_seconds()/3600
-        tested=0
-        for i in gaps[gaps>12].index:
-            a,b=g.iloc[i-1],g.iloc[i]
-            midpoint=a.local_dt+(b.local_dt-a.local_dt)/2
-            result=app.instant("CUR007",midpoint.to_pydatetime())
+        frame=CurrentSafetyTests().sample()
+        frame.loc[1,"local_dt"]=pd.Timestamp("2026-11-27 12:00")
+        with patch.object(app,"EVENTS",frame),patch.object(app,"station_row"):
+            result=app.instant("TEST",datetime(2026,11,27,4))
             self.assertIsNone(result["intensity_kn"])
             self.assertEqual(result["status"],"SOURCE_GAP_REVIEW_REQUIRED")
-            tested+=1
-        self.assertGreater(tested,0)
+        import integrated_services
+        with patch.object(integrated_services,"EVENTS",frame):
+            self.assertEqual(integrated_services._model_threshold_windows("TEST",datetime(2026,11,26,23),24,2.5),[])
+    def test_quesahuen_restored_events(self):
+        for stamp,kind,kn in [
+            ("2026-01-31T15:29","SLACK",0),("2026-01-31T17:06","MAX_EBB",4.1),
+            ("2026-01-31T19:10","SLACK",0),("2026-01-31T23:41","MAX_FLOOD",2.8),
+            ("2026-03-31T15:40","SLACK",0),("2026-03-31T17:13","MAX_EBB",4.1),
+            ("2026-03-31T20:02","SLACK",0),("2026-04-01T00:03","MAX_FLOOD",2.6)]:
+            r=app.instant("CUR007",datetime.fromisoformat(stamp))
+            self.assertEqual(r["event_type"],kind)
+            self.assertEqual(r["intensity_kn"],kn)
+        g=app.EVENTS[app.EVENTS.station_id=="CUR007"].sort_values("local_dt")
+        self.assertFalse(g.local_dt.duplicated().any())
+        self.assertLessEqual(g.local_dt.diff().max(),pd.Timedelta(hours=12))
     def test_long_gap_report(self):
         for sid in ("CUR007","CUR021"):
             g=app.EVENTS[app.EVENTS.station_id==sid].sort_values("local_dt").reset_index(drop=True)
