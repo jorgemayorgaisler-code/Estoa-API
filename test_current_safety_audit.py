@@ -138,6 +138,11 @@ class PublishedStationTests(unittest.TestCase):
         import integrated_services
         with patch.object(integrated_services,"EVENTS",frame):
             self.assertEqual(integrated_services._model_threshold_windows("TEST",datetime(2026,11,26,23),24,2.5),[])
+    def test_white_restored_slacks(self):
+        for stamp in ["2026-01-31T22:07","2026-03-31T22:54"]:
+            r=app.instant("CUR010",datetime.fromisoformat(stamp))
+            self.assertEqual(r["event_type"],"SLACK")
+            self.assertEqual(r["intensity_kn"],0)
     def test_quesahuen_restored_events(self):
         for stamp,kind,kn in [
             ("2026-01-31T15:29","SLACK",0),("2026-01-31T17:06","MAX_EBB",4.1),
