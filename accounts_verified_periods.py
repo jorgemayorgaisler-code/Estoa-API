@@ -11,6 +11,9 @@ def record_verified_period(provider_id,payment_id,amount,start,end):
         sub=conn.execute("SELECT amount_clp,status FROM subscriptions WHERE provider_id=%s FOR UPDATE",(provider_id,)).fetchone()
         if not sub or sub["amount_clp"]!=amount or sub["status"]!="authorized":
             raise ValueError("Subscription mismatch")
+        overlap=conn.execute("""SELECT 1 FROM subscription_payments WHERE provider_id=%s AND provider_payment_id<>%s AND status='approved' AND period_start<%s AND period_end>%s""",(provider_id,payment_id,end,start)).fetchone()
+        if overlap:
+            raise ValueError("Overlapping approved period")
         row=conn.execute("""INSERT INTO subscription_payments(provider_payment_id,provider_id,amount_clp,currency,period_start,period_end,status)
             VALUES (%s,%s,%s,'CLP',%s,%s,'approved') ON CONFLICT DO NOTHING RETURNING provider_payment_id""",(payment_id,provider_id,amount,start,end)).fetchone()
         if not row:
