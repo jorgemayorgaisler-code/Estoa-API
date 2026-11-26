@@ -35,6 +35,7 @@ for sid,day,hhmm,kind,kn,direction,page in [
     ("CUR010","2026-03-31","2154","SLACK",0,None,68),
     ("CUR021","2026-01-31","2304","SLACK",0,None,142),
     ("CUR021","2026-03-31","2310","SLACK",0,None,143),
+    ("CUR009","2026-08-31","2101","SLACK",0,None,63),
 ]:
     stamp=pd.Timestamp(day+" "+hhmm[:2]+":"+hhmm[2:])
     existing=EVENTS[(EVENTS.station_id==sid) & (EVENTS.source_dt==stamp)]
