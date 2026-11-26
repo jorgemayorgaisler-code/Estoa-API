@@ -69,6 +69,8 @@ def instant(station_id, dt):
     if pd.isna(ref.intensity_kn) or not math.isfinite(float(ref.intensity_kn)) or float(ref.intensity_kn)<0:
         return {"status":"INVALID_SOURCE_VALUE","intensity_kn":None,"phase":"UNKNOWN","direction_true":None,"trend":"UNKNOWN","reason":"INVALID_MAXIMUM_INTENSITY","message":"Velocidad maxima publicada ausente o invalida; no se interpola."}
     dur=(b.local_dt-a.local_dt).total_seconds()
+    if dur > 12*3600:
+        return {"status":"SOURCE_GAP_REVIEW_REQUIRED","intensity_kn":None,"phase":"UNKNOWN","direction_true":None,"trend":"UNKNOWN","reason":"UNVERIFIED_LONG_EVENT_INTERVAL","message":"Intervalo superior a 12 horas pendiente de cotejo con SHOA; no se interpola."}
     f=(t-a.local_dt).total_seconds()/dur
     if a.event_type=="SLACK":
         val=float(b.intensity_kn)*math.sin(math.pi*f/2); ref=b
@@ -308,6 +310,7 @@ def interpolation_qa():
             a,b=g.iloc[i],g.iloc[i+1]
             standard=(a.event_type=="SLACK" and b.event_type in MAX_TYPES) or (a.event_type in MAX_TYPES and b.event_type=="SLACK")
             if not standard: continue
+            if (b.local_dt-a.local_dt).total_seconds()>12*3600: continue
             mid=a.local_dt+(b.local_dt-a.local_dt)/2
             got=instant(sid,mid.to_pydatetime()); im=float(b.intensity_kn if a.event_type=="SLACK" else a.intensity_kn)
             expected=round(im*math.sqrt(0.5),3); tested+=1
