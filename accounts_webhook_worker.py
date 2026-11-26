@@ -7,7 +7,7 @@ def claim():
     token=uuid.uuid4()
     with connection() as conn:
         conn.execute("""UPDATE payment_webhook_inbox SET state='review',lease_token=NULL,lease_until=NULL
-            WHERE state='processing' AND lease_until<=now() AND attempts>=%s""",(MAX_ATTEMPTS,))
+            WHERE attempts>=%s AND (state='pending' OR (state='processing' AND lease_until<=now()))""",(MAX_ATTEMPTS,))
         return conn.execute("""WITH candidate AS (
             SELECT request_id FROM payment_webhook_inbox
             WHERE attempts<%s AND ((state='pending' AND next_attempt_at<=now())
@@ -19,6 +19,8 @@ def claim():
             RETURNING i.request_id,i.resource_id,i.lease_token,i.attempts""",(MAX_ATTEMPTS,token)).fetchone()
 
 def finish(request_id,token,success):
+    if type(success) is not bool:
+        raise ValueError('Explicit processing outcome required')
     with connection() as conn:
         row=conn.execute("""UPDATE payment_webhook_inbox SET
             state=CASE WHEN %s THEN 'processed' WHEN attempts>=%s THEN 'review' ELSE 'pending' END,
