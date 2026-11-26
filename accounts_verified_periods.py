@@ -11,6 +11,11 @@ def record_verified_period(provider_id,payment_id,amount,start,end):
         sub=conn.execute("SELECT amount_clp,status FROM subscriptions WHERE provider_id=%s FOR UPDATE",(provider_id,)).fetchone()
         if not sub or sub["amount_clp"]!=amount or sub["status"]!="authorized":
             raise ValueError("Subscription mismatch")
+        revoked=conn.execute("SELECT provider_id,status FROM payment_revocations WHERE provider_payment_id=%s",(payment_id,)).fetchone()
+        if revoked and revoked["provider_id"]!=provider_id:
+            raise ValueError("Revocation subscription mismatch")
+        if revoked:
+            return _refresh(conn,provider_id)
         overlap=conn.execute("""SELECT 1 FROM subscription_payments WHERE provider_id=%s AND provider_payment_id<>%s AND status='approved' AND period_start<%s AND period_end>%s""",(provider_id,payment_id,end,start)).fetchone()
         if overlap:
             raise ValueError("Overlapping approved period")
@@ -35,7 +40,14 @@ def revoke_verified_payment(provider_id,payment_id,status):
     with connection() as conn:
         if not conn.execute("SELECT provider_id FROM subscriptions WHERE provider_id=%s FOR UPDATE",(provider_id,)).fetchone():
             raise LookupError("Unknown subscription")
-        if not conn.execute("""UPDATE subscription_payments SET status=%s,verified_at=now()
-            WHERE provider_id=%s AND provider_payment_id=%s RETURNING provider_payment_id""",(status,provider_id,payment_id)).fetchone():
-            raise LookupError("Unknown payment")
+        existing=conn.execute("SELECT provider_id FROM subscription_payments WHERE provider_payment_id=%s",(payment_id,)).fetchone()
+        if existing and existing["provider_id"]!=provider_id:
+            raise ValueError("Payment subscription mismatch")
+        row=conn.execute("""INSERT INTO payment_revocations(provider_payment_id,provider_id,status)
+            VALUES (%s,%s,%s) ON CONFLICT(provider_payment_id) DO UPDATE SET
+            status=CASE WHEN payment_revocations.status='charged_back' THEN 'charged_back' ELSE EXCLUDED.status END,verified_at=now()
+            WHERE payment_revocations.provider_id=EXCLUDED.provider_id RETURNING status""",(payment_id,provider_id,status)).fetchone()
+        if not row:
+            raise ValueError("Revocation subscription mismatch")
+        conn.execute("UPDATE subscription_payments SET status=%s,verified_at=now() WHERE provider_id=%s AND provider_payment_id=%s",(row["status"],provider_id,payment_id))
         return _refresh(conn,provider_id)
