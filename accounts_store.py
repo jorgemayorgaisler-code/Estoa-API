@@ -28,7 +28,7 @@ def register(email, password):
 
 def login(email, password):
     with connection() as conn:
-        row = conn.execute("SELECT id,password_hash,email_verified_at,disabled_at FROM accounts WHERE email=%s",
+        row = conn.execute("SELECT id,password_hash,email_verified_at,disabled_at FROM accounts WHERE email=%s FOR UPDATE",
                            (email.strip().lower(),)).fetchone()
         if not row or not verify_password(password,row["password_hash"]) or not row["email_verified_at"] or row["disabled_at"]:
             return None
