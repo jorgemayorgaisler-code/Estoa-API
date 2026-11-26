@@ -46,6 +46,8 @@ def instant(station_id, dt):
     exact=g[g.local_dt==t]
     if len(exact):
         e=exact.iloc[0]
+        if e.event_type in MAX_TYPES and (pd.isna(e.intensity_kn) or not math.isfinite(float(e.intensity_kn)) or float(e.intensity_kn)<0):
+            return {"status":"INVALID_SOURCE_VALUE","intensity_kn":None,"phase":"UNKNOWN","direction_true":None,"trend":"UNKNOWN","event_type":e.event_type,"reason":"INVALID_MAXIMUM_INTENSITY"}
         return {"status":"PUBLISHED_EVENT","intensity_kn":float(e.intensity_kn) if pd.notna(e.intensity_kn) else None,
                 "phase":phase_of(e.event_type),"direction_true":float(e.direction_true) if pd.notna(e.direction_true) else None,
                 "trend":"EVENT","event_type":e.event_type}
