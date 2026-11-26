@@ -138,12 +138,20 @@ class PublishedStationTests(unittest.TestCase):
         import integrated_services
         with patch.object(integrated_services,"EVENTS",frame):
             self.assertEqual(integrated_services._model_threshold_windows("TEST",datetime(2026,11,26,23),24,2.5),[])
+    def test_white_restored_slacks(self):
+        for stamp in ["2026-01-31T22:07","2026-03-31T22:54"]:
+            r=app.instant("CUR010",datetime.fromisoformat(stamp))
+            self.assertEqual(r["event_type"],"SLACK")
+            self.assertEqual(r["intensity_kn"],0)
     def test_quesahuen_restored_events(self):
         for stamp,kind,kn in [
             ("2026-01-31T15:29","SLACK",0),("2026-01-31T17:06","MAX_EBB",4.1),
             ("2026-01-31T19:10","SLACK",0),("2026-01-31T23:41","MAX_FLOOD",2.8),
             ("2026-03-31T15:40","SLACK",0),("2026-03-31T17:13","MAX_EBB",4.1),
-            ("2026-03-31T20:02","SLACK",0),("2026-04-01T00:03","MAX_FLOOD",2.6)]:
+            ("2026-03-31T20:02","SLACK",0),("2026-04-01T00:03","MAX_FLOOD",2.6),
+            ("2026-08-31T22:23","SLACK",0),("2026-08-31T23:06","MAX_FLOOD",1.0),
+            ("2026-09-01T00:03","MAX_FLOOD",0.4),("2026-10-31T20:26","SLACK",0),
+            ("2026-10-31T22:41","MAX_EBB",3.1)]:
             r=app.instant("CUR007",datetime.fromisoformat(stamp))
             self.assertEqual(r["event_type"],kind)
             self.assertEqual(r["intensity_kn"],kn)

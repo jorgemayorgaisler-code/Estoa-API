@@ -16,24 +16,31 @@ REG=pd.read_csv(DATA/"station_registry.csv")
 
 EVENTS["source_time"]=EVENTS["source_time"].astype(str).str.replace(r"\.0$","",regex=True).str.zfill(4)
 EVENTS["source_dt"]=pd.to_datetime(EVENTS["source_date"]+" "+EVENTS["source_time"].str[:2]+":"+EVENTS["source_time"].str[2:])
-# Source corrections: PUB3015 2026 pp. 47–48, original table times.
-for day,hhmm,kind,kn,direction,page in [
-    ("2026-01-31","1429","SLACK",0,None,47),
-    ("2026-01-31","1606","MAX_EBB",4.1,32,47),
-    ("2026-01-31","1810","SLACK",0,None,47),
-    ("2026-01-31","2241","MAX_FLOOD",2.8,192,47),
-    ("2026-03-31","1440","SLACK",0,None,48),
-    ("2026-03-31","1613","MAX_EBB",4.1,32,48),
-    ("2026-03-31","1902","SLACK",0,None,48),
-    ("2026-03-31","2303","MAX_FLOOD",2.6,192,48),
+# Source corrections: PUB3015 2026, original table times.
+for sid,day,hhmm,kind,kn,direction,page in [
+    ("CUR007","2026-01-31","1429","SLACK",0,None,47),
+    ("CUR007","2026-01-31","1606","MAX_EBB",4.1,32,47),
+    ("CUR007","2026-01-31","1810","SLACK",0,None,47),
+    ("CUR007","2026-01-31","2241","MAX_FLOOD",2.8,192,47),
+    ("CUR007","2026-03-31","1440","SLACK",0,None,48),
+    ("CUR007","2026-03-31","1613","MAX_EBB",4.1,32,48),
+    ("CUR007","2026-03-31","1902","SLACK",0,None,48),
+    ("CUR007","2026-03-31","2303","MAX_FLOOD",2.6,192,48),
+    ("CUR007","2026-08-31","2123","SLACK",0,None,50),
+    ("CUR007","2026-08-31","2206","MAX_FLOOD",1.0,192,50),
+    ("CUR007","2026-08-31","2303","MAX_FLOOD",0.4,192,50),
+    ("CUR007","2026-10-31","1926","SLACK",0,None,51),
+    ("CUR007","2026-10-31","2141","MAX_EBB",3.1,32,51),
+    ("CUR010","2026-01-31","2107","SLACK",0,None,67),
+    ("CUR010","2026-03-31","2154","SLACK",0,None,68),
 ]:
     stamp=pd.Timestamp(day+" "+hhmm[:2]+":"+hhmm[2:])
-    existing=EVENTS[(EVENTS.station_id=="CUR007") & (EVENTS.source_dt==stamp)]
+    existing=EVENTS[(EVENTS.station_id==sid) & (EVENTS.source_dt==stamp)]
     if existing.empty:
-        row=dict(station_id="CUR007",source_date=day,source_time=hhmm,source_dt=stamp,event_type=kind,intensity_kn=kn,direction_true=direction,source_page=page)
+        row=dict(station_id=sid,source_date=day,source_time=hhmm,source_dt=stamp,event_type=kind,intensity_kn=kn,direction_true=direction,source_page=page)
         EVENTS=pd.concat([EVENTS,pd.DataFrame([row])],ignore_index=True)
     elif len(existing)!=1 or existing.iloc[0].event_type!=kind or existing.iloc[0].intensity_kn!=kn:
-        raise ValueError("Conflicting Quesahuen source correction: "+str(stamp))
+        raise ValueError("Conflicting source correction: "+str(stamp))
 ADD1=set(REG.loc[REG["timezone_rule_2026"]=="PUB3015_PAGES_35_153_ADD_1H_2026","station_id"])
 EVENTS["local_dt"]=EVENTS["source_dt"]+pd.to_timedelta(EVENTS["station_id"].isin(ADD1).astype(int),unit="h")
 EVENTS=EVENTS.sort_values(["station_id","local_dt"]).reset_index(drop=True)
