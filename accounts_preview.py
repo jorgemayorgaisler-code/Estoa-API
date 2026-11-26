@@ -44,6 +44,9 @@ async def no_private_cache(request,call_next):
     response=await call_next(request)
     if request.url.path.startswith(("/private/","/accounts/")):
         response.headers["Cache-Control"]="no-store"
+        response.headers["Pragma"]="no-cache"
+    response.headers["X-Content-Type-Options"]="nosniff"
+    response.headers["Referrer-Policy"]="no-referrer"
     return response
 
 if os.environ.get("ESTOA_EMAIL_PREVIEW")=="true":
