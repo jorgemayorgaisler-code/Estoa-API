@@ -16,6 +16,8 @@ class AdminIntegrationTests(unittest.TestCase):
             with connection() as conn:
                 conn.execute("INSERT INTO account_admin_grants(account_id) VALUES (%s)",(aid,))
             summary=admin_summary(aid)
+            with connection() as conn:
+                self.assertEqual(conn.execute("SELECT count(*) AS n FROM admin_access_audit WHERE account_id=%s",(aid,)).fetchone()["n"],1)
             self.assertEqual(set(summary),{"verified_accounts","active_trials","paid_accounts","approved_ledger_clp","review_notifications"})
             with connection() as conn:
                 conn.execute("UPDATE account_admin_grants SET revoked_at=now() WHERE account_id=%s",(aid,))
@@ -28,4 +30,5 @@ class AdminIntegrationTests(unittest.TestCase):
                 admin_summary(aid)
         finally:
             with connection() as conn:
+                conn.execute("DELETE FROM admin_access_audit WHERE account_id=%s",(aid,))
                 conn.execute("DELETE FROM accounts WHERE id=%s",(aid,))
