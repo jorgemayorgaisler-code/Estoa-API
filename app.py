@@ -29,13 +29,20 @@ def station_row(station_id):
     if x.empty: raise HTTPException(404,"Unknown station_id")
     return x.iloc[0]
 
+def station_local_datetime(station_id, dt):
+    """Naive inputs are station-local; aware inputs represent an absolute instant."""
+    from zoneinfo import ZoneInfo
+    if dt.tzinfo is None:
+        return dt
+    return dt.astimezone(ZoneInfo(str(station_row(station_id).timezone_id))).replace(tzinfo=None)
+
 def phase_of(event_type):
     return {"MAX_FLOOD":"FLOOD","MAX_EBB":"EBB","SLACK":"SLACK","WEAK_VARIABLE":"VARIABLE"}.get(event_type,"UNKNOWN")
 
 def instant(station_id, dt):
     station_row(station_id)
     g=EVENTS[EVENTS.station_id==station_id].sort_values("local_dt").reset_index(drop=True)
-    t=pd.Timestamp(dt.replace(tzinfo=None))
+    t=pd.Timestamp(station_local_datetime(station_id,dt))
     exact=g[g.local_dt==t]
     if len(exact):
         e=exact.iloc[0]
@@ -79,7 +86,7 @@ def tide_curve(station_id: str, start: datetime, hours: int = 12):
     station_row(station_id)
     if hours<1 or hours>24:
         raise HTTPException(422,"hours must be between 1 and 24")
-    t=pd.Timestamp(start.replace(tzinfo=None))
+    t=pd.Timestamp(station_local_datetime(station_id,start))
     samples=[]
     for n in range(hours*2+1):
         dt=t+pd.Timedelta(minutes=30*n)
@@ -97,7 +104,7 @@ def current_curve(station_id: str, start: datetime, hours: int = 24, interval_mi
         raise HTTPException(422, "hours must be between 1 and 168")
     if interval_minutes not in (5, 10, 15, 30, 60):
         raise HTTPException(422, "interval_minutes must be 5, 10, 15, 30 or 60")
-    s = pd.Timestamp(start.replace(tzinfo=None))
+    s = pd.Timestamp(station_local_datetime(station_id,start))
     count = hours * 60 // interval_minutes
     samples = []
     for i in range(count + 1):
@@ -151,7 +158,7 @@ def stations():
 def current_diagnostic(station_id: str, local_datetime: datetime):
     """Explain unavailable instantaneous currents with surrounding source events."""
     station_row(station_id)
-    t = pd.Timestamp(local_datetime.replace(tzinfo=None))
+    t = pd.Timestamp(station_local_datetime(station_id,local_datetime))
     g = EVENTS[EVENTS.station_id == station_id].sort_values("local_dt")
     before = g[g.local_dt <= t].tail(1)
     after = g[g.local_dt > t].head(1)
@@ -171,6 +178,7 @@ def current_diagnostic(station_id: str, local_datetime: datetime):
 @app.get("/conditions/at")
 def conditions_at(station_id:str, local_datetime:datetime):
     r=station_row(station_id)
+    local_datetime=station_local_datetime(station_id,local_datetime)
     return {"station":{"station_id":station_id,"name":r.station_name},
             "query":{"local_datetime":local_datetime.isoformat()},
             "current":instant(station_id,local_datetime),
@@ -202,19 +210,20 @@ def conditions_map(at_utc: datetime | None = None):
 def conditions_now(station_id:str):
     # Server clock is intentionally explicit; mobile client should normally call /conditions/at
     # with the station-local time it wants displayed.
-    return conditions_at(station_id,datetime.now())
+    from datetime import timezone
+    return conditions_at(station_id,datetime.now(timezone.utc))
 
 @app.get("/forecast")
 def forecast(station_id:str, start:datetime, hours:int=24):
     station_row(station_id)
-    s=pd.Timestamp(start.replace(tzinfo=None)); e=s+pd.Timedelta(hours=hours)
+    s=pd.Timestamp(station_local_datetime(station_id,start)); e=s+pd.Timedelta(hours=hours)
     g=EVENTS[(EVENTS.station_id==station_id)&(EVENTS.local_dt>=s)&(EVENTS.local_dt<=e)].copy()
     out=[]
     for _,x in g.iterrows():
         out.append({"local_datetime":x.local_dt.isoformat(),"event_type":x.event_type,
                     "intensity_kn":float(x.intensity_kn) if pd.notna(x.intensity_kn) else None,
                     "direction_true":float(x.direction_true) if pd.notna(x.direction_true) else None})
-    return {"station_id":station_id,"start":start.isoformat(),"hours":hours,"events":out}
+    return {"station_id":station_id,"start":s.isoformat(),"hours":hours,"events":out}
 
 
 @app.get("/weak-windows")
@@ -226,7 +235,7 @@ def weak_windows_endpoint(station_id:str, start:datetime, hours:int=24, threshol
         raise HTTPException(status_code=422,detail="threshold_kn must be between 0 and 10 knots")
     if not 1 <= hours <= 168:
         raise HTTPException(status_code=422,detail="hours must be between 1 and 168")
-    return {"station_id":station_id,"threshold_kn":threshold_kn,"windows":weak_windows(station_id,start,hours,threshold_kn)}
+    return {"station_id":station_id,"threshold_kn":threshold_kn,"windows":weak_windows(station_id,station_local_datetime(station_id,start),hours,threshold_kn)}
 
 @app.get("/capabilities")
 def capabilities(station_id:str):
