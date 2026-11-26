@@ -1,4 +1,5 @@
 """Opt-in email verification and reset endpoints."""
+import logging
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 from accounts_store import connection
@@ -6,6 +7,14 @@ from accounts_verification import issue_verification, consume_verification
 from accounts_reset import issue_reset, consume_reset
 from accounts_rate_limits import allow_attempt
 from accounts_mail import send_code
+
+logger=logging.getLogger("estoa.email")
+
+def deliver(email,token,purpose):
+    try:
+        send_code(email,token,purpose)
+    except Exception:
+        logger.warning("email_delivery_failed purpose=%s",purpose)
 
 class Email(BaseModel):
     email: str=Field(min_length=3,max_length=254)
@@ -31,8 +40,7 @@ def build_email_router():
         if row:
             token=issue_verification(row["id"])
             if token:
-                try: send_code(email,token,"verify")
-                except Exception: pass
+                deliver(email,token,"verify")
         return {"status":"accepted"}
     @router.post("/verification/confirm")
     def confirm(body:Code,request:Request):
@@ -47,8 +55,7 @@ def build_email_router():
         limit("reset_email",email)
         token=issue_reset(email)
         if token:
-            try: send_code(email,token,"reset")
-            except Exception: pass
+            deliver(email,token,"reset")
         return {"status":"accepted"}
     @router.post("/reset/confirm")
     def reset(body:Reset,request:Request):
