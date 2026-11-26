@@ -10,7 +10,7 @@ def admin_summary(account_id):
         conn.execute("INSERT INTO admin_access_audit(account_id,action) VALUES (%s,'summary_read')",(account_id,))
         return conn.execute("""SELECT
             (SELECT count(*) FROM accounts WHERE email_verified_at IS NOT NULL AND disabled_at IS NULL) AS verified_accounts,
-            (SELECT count(*) FROM premium_trials WHERE activated_at<=now() AND expires_at>now()) AS active_trials,
-            (SELECT count(DISTINCT account_id) FROM subscriptions WHERE status='authorized' AND access_until>now()) AS paid_accounts,
+            (SELECT count(*) FROM premium_trials t JOIN accounts a ON a.id=t.account_id WHERE t.activated_at<=now() AND t.expires_at>now() AND a.disabled_at IS NULL AND a.email_verified_at IS NOT NULL) AS active_trials,
+            (SELECT count(DISTINCT s.account_id) FROM subscriptions s JOIN accounts a ON a.id=s.account_id WHERE s.status='authorized' AND s.access_until>now() AND a.disabled_at IS NULL AND a.email_verified_at IS NOT NULL) AS paid_accounts,
             (SELECT COALESCE(sum(amount_clp),0) FROM subscription_payments WHERE status='approved') AS approved_ledger_clp,
             (SELECT count(*) FROM payment_webhook_inbox WHERE state='review') AS review_notifications""").fetchone()
