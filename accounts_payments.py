@@ -33,3 +33,9 @@ def create_pending_subscription(account_id, verified_email):
 
 def fetch_subscription(provider_id):
     return provider_request("/preapproval/"+quote(provider_id,safe=""))
+
+def fetch_authorized_payment(resource_id):
+    return provider_request("/authorized_payments/"+quote(str(resource_id),safe=""))
+
+def fetch_payment(resource_id):
+    return provider_request("/v1/payments/"+quote(str(resource_id),safe=""))
