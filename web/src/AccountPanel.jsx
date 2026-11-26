@@ -12,6 +12,7 @@ export default function AccountPanel({apiBase, stations=[]}) {
   const [station,setStation]=useState("");
   const [message,setMessage]=useState("");
   const [busy,setBusy]=useState(false);
+  const [consent,setConsent]=useState(false);
   async function request(path,body,method="POST"){
     const response=await fetch(apiBase.replace(/\/$/,"")+"/accounts/"+path,{
       method,headers:{"Content-Type":"application/json",...(token?{Authorization:"Bearer "+token}:{})},
@@ -57,6 +58,7 @@ export default function AccountPanel({apiBase, stations=[]}) {
     </>}
     <article className="estoa-premium"><h3>ESTOA Premium</h3><strong>Primer mes gratis</strong><p>$990 CLP al mes después, si decides suscribirte.</p><p>Todas las estaciones. Sin cobro automático.</p>
       {token&&<button disabled={busy||!!trial||!!status?.activated_at} onClick={()=>run(asyncasync()=>{setTrial(await request("me/trial"));setStatus(await request("me",null,"GET"))})}>Activar mes gratuito</button>}
+      {token&&status?.plan==="free"&&import.meta.env.VITE_PAYMENT_PREVIEW==="true"&&<><label><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/>Acepto contratar Premium por $990 CLP mensuales mediante Mercado Pago.</label><button disabled={busy||!consent} onClick={()=>run(async()=>{const data=await request("me/checkout",{consent:true});const url=new URL(data.checkout_url);if(url.protocol!=="https:"||!["www.mercadopago.cl","www.mercadopago.com","www.mercadopago.com.ar"].includes(url.hostname))throw Error("Enlace de pago inválido");window.location.assign(url.href)})}>Contratar Premium</button></>}
       {status&&<p>Plan vigente: {status.plan==="premium"?"Premium":"Free"}</p>}
       {expiry&&<p>{days>0?"Periodo gratuito: "+days+" días restantes. ":"Periodo gratuito finalizado. "}Vencimiento: {new Date(expiry).toLocaleString("es-CL",{timeZone:"America/Santiago"})}</p>}
     </article>
