@@ -104,5 +104,32 @@ class EndpointSafetyTests(unittest.TestCase):
             self.assertEqual(result["start_local"],"2026-11-26T09:00:00")
             self.assertEqual(len(result["events"]),1)
 
+class PublishedStationTests(unittest.TestCase):
+    def test_kirke_reference(self):
+        result=app.kirke_reference_qa()
+        self.assertTrue(result["pass"],str(result))
+    def test_white_gap_diagnostics(self):
+        g=app.EVENTS[app.EVENTS.station_id=="CUR010"].sort_values("local_dt").reset_index(drop=True)
+        tested=0
+        for i in range(len(g)-1):
+            a,b=g.iloc[i],g.iloc[i+1]
+            if "WEAK_VARIABLE" not in (a.event_type,b.event_type):
+                continue
+            midpoint=a.local_dt+(b.local_dt-a.local_dt)/2
+            result=app.current_diagnostic("CUR010",midpoint.to_pydatetime())
+            self.assertIsNone(result["current"]["intensity_kn"])
+            self.assertIsNotNone(result["previous_event"])
+            self.assertIsNotNone(result["next_event"])
+            tested+=1
+        self.assertGreater(tested,0)
+    def test_long_gap_report(self):
+        for sid in ("CUR007","CUR021"):
+            g=app.EVENTS[app.EVENTS.station_id==sid].sort_values("local_dt").reset_index(drop=True)
+            gaps=g.local_dt.diff().dt.total_seconds()/3600
+            for i in gaps[gaps>12].index:
+                a,b=g.iloc[i-1],g.iloc[i]
+                print("LONG_GAP",sid,a.local_dt,a.event_type,b.local_dt,b.event_type,round(gaps[i],3))
+            self.assertGreater(len(g),0)
+
 if __name__=="__main__":
     unittest.main()
