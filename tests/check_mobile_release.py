@@ -13,10 +13,13 @@ assert 'navigator.serviceWorker.register' in html
 assert re.search(r"const CACHE='estoa-v\d+'", sw)
 assert "e.request.mode==='navigate'" in sw
 assert "cache:'no-store'" in sw
-assert "u.hostname==='estoa-api.onrender.com'" in sw
+assert "u.origin!==self.location.origin" in sw
 assert "const fetchWithTimeout=" in app
 assert "fetchWithTimeout(API+'/conditions/at?" in app
-assert "setMomentData(a);setLoading(false)" in app
+moment_query = app.split("const queryMoment=async()=>", 1)[1].split("const rad=", 1)[0]
+assert re.search(r"setMomentData\(a\);(?:setMomentSolarStatus\('loading'\);)?setLoading\(false\);", moment_query)
+assert moment_query.index("setLoading(false);") < moment_query.index("Promise.allSettled(")
+assert "finally{if(request===momentRequest.current)setLoading(false)}" in moment_query
 assert "Promise.allSettled(" in app
 assert "tideCurve={momentCurve} nowTime={moment}" in app
 assert "CONSULTA · " in app

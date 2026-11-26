@@ -1,0 +1,28 @@
+name: ESTOA current safety audit
+on:
+  pull_request:
+  push:
+    branches: [main, 'fix/audit-current-null-2026-11-26']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Run regression tests
+        run: python -m unittest -v test_current_safety_audit
+      - name: Audit source data
+        if: always()
+        run: |
+          python audit_source_data.py > source-audit.json
+          cat source-audit.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: source-audit
+          path: source-audit.json

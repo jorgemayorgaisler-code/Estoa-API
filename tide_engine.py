@@ -29,6 +29,14 @@ def tide_at(station_id,when):
     if pd.isna(p.height_m) or pd.isna(n.height_m):
         return {"available":True,"height_m":None,"display_height_m":None,"trend":trend,
                 "previous":pe,"next":ne,"method":"PUB3009_EVENT_TIMES_ONLY"}
+    if {p.type,n.type}!={"HW","LW"}:
+        return {"available":True,"height_m":None,"display_height_m":None,"trend":"UNKNOWN",
+                "previous":pe,"next":ne,"method":"NONSTANDARD_TIDE_SEQUENCE"}
+    if not all(math.isfinite(float(x.height_m)) for x in (p,n)):
+        return {"available":False,"height_m":None,"reason":"INVALID_SOURCE_HEIGHT"}
+    if (n.type=="HW" and n.height_m<p.height_m) or (n.type=="LW" and n.height_m>p.height_m):
+        return {"available":True,"height_m":None,"display_height_m":None,"trend":"UNKNOWN",
+                "previous":pe,"next":ne,"method":"INCONSISTENT_TIDE_HEIGHTS"}
     h=direct_height(p,n,t)
     return {"available":True,"height_m":round(h,3),"display_height_m":round(h,2),"trend":trend,
             "previous":pe,"next":ne,"method":"PUB3009_DIRECT_COSINE"}
