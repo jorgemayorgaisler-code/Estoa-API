@@ -47,4 +47,5 @@ for day,hhmm,kind,kn in reference:
     stamp=pd.Timestamp(day+" "+hhmm[:2]+":"+hhmm[2:])
     rows=events.loc[(events.station_id=="CUR007") & (dt==stamp)]
     report["quesahuen_source_comparison"].append({"source_datetime":str(stamp),"expected_type":kind,"expected_kn":kn,"matching_timestamp_count":len(rows),"actual":rows[["event_type","intensity_kn","direction_true"]].fillna("").to_dict("records")})
+report["quesahuen_missing_timestamps"]=sum(x["matching_timestamp_count"]==0 for x in report["quesahuen_source_comparison"])
 print(json.dumps(report,ensure_ascii=False,indent=2,allow_nan=False))
