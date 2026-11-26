@@ -7,6 +7,7 @@ def admin_summary(account_id):
             FOR SHARE OF a,g""",(account_id,)).fetchone()
         if not row:
             raise PermissionError("Administrative access required")
+        conn.execute("INSERT INTO admin_access_audit(account_id,action) VALUES (%s,'summary_read')",(account_id,))
         return conn.execute("""SELECT
             (SELECT count(*) FROM accounts WHERE email_verified_at IS NOT NULL AND disabled_at IS NULL) AS verified_accounts,
             (SELECT count(*) FROM premium_trials WHERE activated_at<=now() AND expires_at>now()) AS active_trials,
