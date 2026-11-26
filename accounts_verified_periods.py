@@ -8,6 +8,7 @@ def record_verified_period(provider_id,payment_id,amount,start,end):
     if not timedelta(days=27)<=end-start<=timedelta(days=32):
         raise ValueError("Unexpected monthly period")
     with connection() as conn:
+        conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s, 78123902))",(str(payment_id),))
         sub=conn.execute("SELECT amount_clp,status FROM subscriptions WHERE provider_id=%s FOR UPDATE",(provider_id,)).fetchone()
         if not sub or sub["amount_clp"]!=amount or sub["status"]!="authorized":
             raise ValueError("Subscription mismatch")
@@ -35,9 +36,10 @@ def _refresh(conn,provider_id):
          WHERE s.provider_id=%s RETURNING access_until""",(provider_id,)).fetchone()["access_until"]
 
 def revoke_verified_payment(provider_id,payment_id,status):
-    if status not in ("refunded","charged_back"):
+    if not provider_id or not payment_id or status not in ("refunded","charged_back"):
         raise ValueError("Invalid revocation status")
     with connection() as conn:
+        conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s, 78123902))",(str(payment_id),))
         if not conn.execute("SELECT provider_id FROM subscriptions WHERE provider_id=%s FOR UPDATE",(provider_id,)).fetchone():
             raise LookupError("Unknown subscription")
         existing=conn.execute("SELECT provider_id FROM subscription_payments WHERE provider_payment_id=%s",(payment_id,)).fetchone()
