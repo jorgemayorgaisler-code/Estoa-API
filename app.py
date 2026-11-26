@@ -58,6 +58,9 @@ def instant(station_id, dt):
                 "direction_true":None,"trend":"UNKNOWN",
                 "reason":"NONSTANDARD_EVENT_SEQUENCE",
                 "message":"Secuencia no estandar: consulte los eventos SHOA publicados."}
+    ref=b if a.event_type=="SLACK" else a
+    if pd.isna(ref.intensity_kn) or not math.isfinite(float(ref.intensity_kn)) or float(ref.intensity_kn)<0:
+        return {"status":"INVALID_SOURCE_VALUE","intensity_kn":None,"phase":"UNKNOWN","direction_true":None,"trend":"UNKNOWN","reason":"INVALID_MAXIMUM_INTENSITY","message":"Velocidad maxima publicada ausente o invalida; no se interpola."}
     dur=(b.local_dt-a.local_dt).total_seconds()
     f=(t-a.local_dt).total_seconds()/dur
     if a.event_type=="SLACK":
