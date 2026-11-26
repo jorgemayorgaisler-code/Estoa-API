@@ -11,6 +11,9 @@ class NavigationTests(unittest.TestCase):
             return {"station_id":station_id}
         for path in ROUTES:
             source.add_api_route(path,calculate,methods=["GET"])
+        @source.get("/conditions/map")
+        def map_data(at_utc=None):
+            return {"at_utc":"test","stations":[{"station_id":"CUR001"},{"station_id":"CUR002"}]}
         preview=FastAPI()
         preview.include_router(build_navigation_router(source,{"CUR001","CUR002"}))
         client=TestClient(preview)
@@ -21,6 +24,9 @@ class NavigationTests(unittest.TestCase):
                 self.assertEqual(client.get("/private"+path,params={"station_id":"CUR002"},headers=headers).status_code,403)
             with patch("accounts_station_guard.session_account",return_value="account"), patch("accounts_station_guard.require_station"):
                 self.assertEqual(client.get("/private"+path,params={"station_id":"CUR001"},headers=headers).json(),{"station_id":"CUR001"})
+        self.assertEqual(client.get("/private/conditions/map").status_code,401)
+        with patch("accounts_navigation.session_account",return_value="account"), patch("accounts_navigation.allowed_stations",return_value={"CUR001"}):
+            self.assertEqual(client.get("/private/conditions/map",headers=headers).json()["stations"],[{"station_id":"CUR001"}])
     def test_missing_route_fails_closed(self):
         with self.assertRaises(RuntimeError):
             build_navigation_router(FastAPI(),{"CUR001"})
