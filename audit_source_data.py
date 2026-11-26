@@ -48,4 +48,18 @@ for day,hhmm,kind,kn in reference:
     rows=events.loc[(events.station_id=="CUR007") & (dt==stamp)]
     report["quesahuen_source_comparison"].append({"source_datetime":str(stamp),"expected_type":kind,"expected_kn":kn,"matching_timestamp_count":len(rows),"actual":rows[["event_type","intensity_kn","direction_true"]].fillna("").to_dict("records")})
 report["quesahuen_missing_timestamps"]=sum(x["matching_timestamp_count"]==0 for x in report["quesahuen_source_comparison"])
+# Compare effective runtime coverage separately from the immutable raw CSV.
+from app import EVENTS
+report["effective_event_count"]=len(EVENTS)
+report["effective_quesahuen_missing_timestamps"]=sum(
+    not ((EVENTS.station_id=="CUR007") & (EVENTS.source_dt==pd.Timestamp(day+" "+hhmm[:2]+":"+hhmm[2:])) & (EVENTS.event_type==kind) & (EVENTS.intensity_kn==kn)).any()
+    for day,hhmm,kind,kn in reference)
+report["month_boundary_review_candidates"]=[]
+for sid,g in EVENTS.groupby("station_id"):
+    g=g.sort_values("source_dt").reset_index(drop=True)
+    for i in range(1,len(g)):
+        a,b=g.iloc[i-1],g.iloc[i]
+        hours=(b.source_dt-a.source_dt).total_seconds()/3600
+        if a.source_dt.month!=b.source_dt.month and hours>4:
+            report["month_boundary_review_candidates"].append(dict(station_id=str(sid),before=str(a.source_dt),after=str(b.source_dt),before_type=str(a.event_type),after_type=str(b.event_type),gap_hours=round(hours,3)))
 print(json.dumps(report,ensure_ascii=False,indent=2,allow_nan=False))
