@@ -18,7 +18,7 @@ class AdminIntegrationTests(unittest.TestCase):
             summary=admin_summary(aid)
             with connection() as conn:
                 self.assertEqual(conn.execute("SELECT count(*) AS n FROM admin_access_audit WHERE account_id=%s",(aid,)).fetchone()["n"],1)
-            self.assertEqual(set(summary),{"verified_accounts","active_trials","paid_accounts","approved_ledger_clp","review_notifications","pending_deletions","billing_deletions","expiring_paid_accounts","trial_paid_accounts"})
+            self.assertEqual(set(summary),{"verified_accounts","active_trials","paid_accounts","approved_ledger_clp","review_notifications","pending_deletions","billing_deletions","expiring_paid_accounts","trial_paid_accounts","current_period_approved_clp","refunded_ledger_clp","charged_back_ledger_clp"})
             with connection() as conn:
                 conn.execute("UPDATE account_admin_grants SET revoked_at=now() WHERE account_id=%s",(aid,))
             with self.assertRaises(PermissionError):
