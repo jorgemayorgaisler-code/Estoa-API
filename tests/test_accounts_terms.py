@@ -2,7 +2,7 @@ import os
 import unittest
 import uuid
 from unittest.mock import patch
-from accounts_terms import accept_terms
+from accounts_terms import accept_terms, terms_status
 from accounts_store import connection
 
 class TermsTests(unittest.TestCase):
@@ -21,7 +21,10 @@ class TermsTests(unittest.TestCase):
             conn.execute("INSERT INTO contractual_documents(version,content_sha256,published_at) VALUES (%s,%s,now())",(version,"a"*64))
         try:
             with patch.dict(os.environ,{"ESTOA_TERMS_VERSION":version}):
+                self.assertIsNone(terms_status(aid)['accepted_at'])
                 first=accept_terms(aid,version,True)
+                self.assertEqual(terms_status(aid)['accepted_at'],first)
+                self.assertEqual(terms_status(aid)['content_sha256'],'a'*64)
                 self.assertEqual(first,accept_terms(aid,version,True))
                 with self.assertRaises(PermissionError):
                     accept_terms(uuid.uuid4(),version,True)
