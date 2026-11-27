@@ -20,4 +20,7 @@ def admin_summary(account_id):
             (SELECT count(DISTINCT s.account_id) FROM subscriptions s JOIN premium_trials t ON t.account_id=s.account_id JOIN accounts a ON a.id=s.account_id WHERE s.status='authorized' AND s.access_until>now() AND a.disabled_at IS NULL AND a.email_verified_at IS NOT NULL) AS trial_paid_accounts,
             (SELECT COALESCE(sum(amount_clp),0) FROM subscription_payments WHERE status='approved' AND date_trunc('month',period_start AT TIME ZONE 'America/Santiago')=date_trunc('month',now() AT TIME ZONE 'America/Santiago')) AS current_period_approved_clp,
             (SELECT COALESCE(sum(amount_clp),0) FROM subscription_payments WHERE status='refunded') AS refunded_ledger_clp,
-            (SELECT COALESCE(sum(amount_clp),0) FROM subscription_payments WHERE status='charged_back') AS charged_back_ledger_clp""").fetchone()
+            (SELECT COALESCE(sum(amount_clp),0) FROM subscription_payments WHERE status='charged_back') AS charged_back_ledger_clp,
+            (SELECT count(*) FROM accounts WHERE email_verified_at>=date_trunc('month',now() AT TIME ZONE 'America/Santiago') AT TIME ZONE 'America/Santiago' AND disabled_at IS NULL) AS newly_verified_month,
+            (SELECT count(*) FROM premium_trials WHERE activated_at>=date_trunc('month',now() AT TIME ZONE 'America/Santiago') AT TIME ZONE 'America/Santiago' AND activated_at<=now()) AS trials_started_month,
+            (SELECT count(*) FROM premium_trials WHERE expires_at<=now()) AS completed_trials""").fetchone()
