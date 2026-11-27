@@ -55,3 +55,10 @@ def logout(token):
     with connection() as conn:
         conn.execute("UPDATE account_sessions SET revoked_at=now() WHERE token_hash=%s AND revoked_at IS NULL",
                      (session_digest(token),))
+
+def revoke_all_sessions(account_id,password):
+    with connection() as conn:
+        row=conn.execute("SELECT password_hash,disabled_at,email_verified_at FROM accounts WHERE id=%s FOR UPDATE",(account_id,)).fetchone()
+        if not row or row["disabled_at"] or not row["email_verified_at"] or not verify_password(password,row["password_hash"]):
+            raise PermissionError("Reauthentication failed")
+        return conn.execute("UPDATE account_sessions SET revoked_at=now() WHERE account_id=%s AND revoked_at IS NULL",(account_id,)).rowcount
