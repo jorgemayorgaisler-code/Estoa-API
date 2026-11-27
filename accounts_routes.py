@@ -98,4 +98,21 @@ def build_router(valid_station_ids):
         except Exception:
             raise HTTPException(503,"Checkout requires reconciliation")
 
+    class TermsConsent(BaseModel):
+        version: str = Field(min_length=1,max_length=100)
+        consent: StrictBool
+
+    @router.post("/me/terms")
+    def terms(body: TermsConsent, account_id=Depends(identity)):
+        import os
+        from accounts_terms import accept_terms
+        if os.environ.get("ESTOA_TERMS_PREVIEW")!="true":
+            raise HTTPException(503,"Terms acceptance unavailable")
+        try:
+            return {"version":body.version,"accepted_at":accept_terms(account_id,body.version,body.consent)}
+        except ValueError:
+            raise HTTPException(409,"Current published terms and explicit consent required")
+        except PermissionError:
+            raise HTTPException(403,"Account unavailable")
+
     return router
