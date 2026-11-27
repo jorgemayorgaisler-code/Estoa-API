@@ -109,7 +109,9 @@ def build_router(valid_station_ids):
         if os.environ.get("ESTOA_TERMS_PREVIEW")!="true":
             raise HTTPException(503,"Terms unavailable")
         try:
-            return terms_status(account_id)
+            from accounts_terms_content import verified_content
+            metadata=terms_status(account_id)
+            return {**metadata,"content":verified_content(metadata)}
         except ValueError:
             raise HTTPException(503,"Terms unavailable")
 
@@ -120,6 +122,10 @@ def build_router(valid_station_ids):
         if os.environ.get("ESTOA_TERMS_PREVIEW")!="true":
             raise HTTPException(503,"Terms acceptance unavailable")
         try:
+            from accounts_terms import terms_status
+            from accounts_terms_content import verified_content
+            metadata=terms_status(account_id)
+            verified_content(metadata)
             return {"version":body.version,"accepted_at":accept_terms(account_id,body.version,body.consent)}
         except ValueError:
             raise HTTPException(409,"Current published terms and explicit consent required")
