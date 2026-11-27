@@ -102,6 +102,17 @@ def build_router(valid_station_ids):
         version: str = Field(min_length=1,max_length=100)
         consent: StrictBool
 
+    @router.get("/me/terms")
+    def current_terms(account_id=Depends(identity)):
+        import os
+        from accounts_terms import terms_status
+        if os.environ.get("ESTOA_TERMS_PREVIEW")!="true":
+            raise HTTPException(503,"Terms unavailable")
+        try:
+            return terms_status(account_id)
+        except ValueError:
+            raise HTTPException(503,"Terms unavailable")
+
     @router.post("/me/terms")
     def terms(body: TermsConsent, account_id=Depends(identity)):
         import os
