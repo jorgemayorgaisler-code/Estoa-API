@@ -161,4 +161,19 @@ def build_router(valid_station_ids):
         except PermissionError:
             raise HTTPException(403,"Reauthentication failed")
 
+    class PasswordChange(BaseModel):
+        current_password: str = Field(min_length=12,max_length=128)
+        new_password: str = Field(min_length=12,max_length=128)
+
+    @router.post("/me/password",status_code=204)
+    def change_password(body: PasswordChange, request: Request, account_id=Depends(identity)):
+        throttle("login_ip",client_key(request))
+        throttle("login_email",str(account_id))
+        try:
+            store.change_password(account_id,body.current_password,body.new_password)
+        except PermissionError:
+            raise HTTPException(403,"Reauthentication failed")
+        except ValueError:
+            raise HTTPException(422,"Invalid password")
+
     return router
