@@ -2,6 +2,7 @@ import React, {useState,useEffect} from "react";
 import "./AccountPanel.css";
 import EmailPanel from "./EmailPanel.jsx";
 import AccountSecurity from "./AccountSecurity.jsx";
+import AccountPrivacy from "./AccountPrivacy.jsx";
 
 export default function AccountPanel({apiBase, stations=[], sessionToken, onSessionChange}) {
   const [mode,setMode]=useState("login");
@@ -69,6 +70,7 @@ export default function AccountPanel({apiBase, stations=[], sessionToken, onSess
       {expiry&&<p>{days>0?"Periodo gratuito: "+days+" días restantes. ":"Periodo gratuito finalizado. "}Vencimiento: {new Date(expiry).toLocaleString("es-CL",{timeZone:"America/Santiago"})}</p>}
     </article>
     {token&&import.meta.env.VITE_COMMERCIAL_PREVIEW==="true"&&<AccountSecurity key={token} apiBase={apiBase} token={token} onSignedOut={()=>{setToken("");setStatus(null);setTrial(null);setConsent(false);setMessage("Inicia sesión nuevamente.")}}/>}
+    {token&&import.meta.env.VITE_COMMERCIAL_PREVIEW==="true"&&import.meta.env.VITE_DELETION_PREVIEW==="true"&&<AccountPrivacy key={token} apiBase={apiBase} token={token} onExpired={()=>{setToken("");setStatus(null)}}/>}
     <p role="status" aria-live="polite">{message}</p>
   </section>
 }
