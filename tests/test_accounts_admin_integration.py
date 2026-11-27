@@ -32,3 +32,25 @@ class AdminIntegrationTests(unittest.TestCase):
             with connection() as conn:
                 conn.execute("DELETE FROM admin_access_audit WHERE account_id=%s",(aid,))
                 conn.execute("DELETE FROM accounts WHERE id=%s",(aid,))
+
+    def test_trial_metric_deltas(self):
+        aid=uuid.uuid4()
+        with connection() as conn:
+            conn.execute("INSERT INTO accounts(id,email,password_hash,email_verified_at) VALUES (%s,%s,'test',now())",(aid,str(aid)+"@example.test"))
+            conn.execute("INSERT INTO account_admin_grants(account_id) VALUES (%s)",(aid,))
+        try:
+            before=admin_summary(aid)
+            with connection() as conn:
+                conn.execute("INSERT INTO premium_trials(account_id,activated_at,expires_at) VALUES (%s,now(),now()+interval '1 month')",(aid,))
+            after=admin_summary(aid)
+            self.assertEqual(after["active_trials"],before["active_trials"]+1)
+            self.assertEqual(after["trials_started_month"],before["trials_started_month"]+1)
+            with connection() as conn:
+                conn.execute("UPDATE premium_trials SET activated_at=now()-interval '2 months',expires_at=now()-interval '1 month' WHERE account_id=%s",(aid,))
+            expired=admin_summary(aid)
+            self.assertEqual(expired["active_trials"],before["active_trials"])
+            self.assertEqual(expired["completed_trials"],before["completed_trials"]+1)
+        finally:
+            with connection() as conn:
+                conn.execute("DELETE FROM admin_access_audit WHERE account_id=%s",(aid,))
+                conn.execute("DELETE FROM accounts WHERE id=%s",(aid,))
