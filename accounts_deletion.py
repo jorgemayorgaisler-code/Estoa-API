@@ -18,3 +18,10 @@ def request_deletion(account_id,password):
         status="billing_review" if subscriptions or reservation else "pending_review"
         conn.execute("INSERT INTO account_deletion_requests(id,account_id,status) VALUES (%s,%s,%s)",(request_id,account_id,status))
         return {"request_id":str(request_id),"status":status}
+
+def deletion_status(account_id):
+    with connection() as conn:
+        row=conn.execute("""SELECT id AS request_id,status,requested_at,reviewed_at
+            FROM account_deletion_requests WHERE account_id=%s
+            ORDER BY requested_at DESC,id DESC LIMIT 1""",(account_id,)).fetchone()
+        return dict(row) if row else None
