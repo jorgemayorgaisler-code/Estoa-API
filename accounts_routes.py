@@ -129,13 +129,23 @@ def build_router(valid_station_ids):
     class DeletionRequest(BaseModel):
         password: str = Field(min_length=12,max_length=128)
 
+    @router.get("/me/deletion-request")
+    def get_deletion_request(account_id=Depends(identity)):
+        import os
+        from accounts_deletion import deletion_status
+        if os.environ.get("ESTOA_DELETION_PREVIEW")!="true":
+            raise HTTPException(503,"Deletion requests unavailable")
+        return {"request":deletion_status(account_id)}
+
     @router.post("/me/deletion-request",status_code=202)
-    def deletion_request(body: DeletionRequest, account_id=Depends(identity)):
+    def deletion_request(body: DeletionRequest, request: Request, account_id=Depends(identity)):
         import os
         from accounts_deletion import request_deletion
         if os.environ.get("ESTOA_DELETION_PREVIEW")!="true":
             raise HTTPException(503,"Deletion requests unavailable")
         try:
+            throttle("login_ip",client_key(request))
+            throttle("login_email",str(account_id))
             return request_deletion(account_id,body.password)
         except PermissionError:
             raise HTTPException(403,"Reauthentication failed")
