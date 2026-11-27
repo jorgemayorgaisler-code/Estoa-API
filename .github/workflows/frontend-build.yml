@@ -23,3 +23,14 @@ jobs:
       - name: Build frontend
         working-directory: web
         run: npm run build
+      - name: Build isolated commercial preview
+        working-directory: web
+        env:
+          VITE_COMMERCIAL_PREVIEW: 'true'
+          VITE_ACCOUNTS_PREVIEW: 'true'
+          VITE_EMAIL_PREVIEW: 'true'
+          VITE_TERMS_PREVIEW: 'true'
+          VITE_DELETION_PREVIEW: 'true'
+          VITE_PAYMENT_PREVIEW: 'true'
+          VITE_ACCOUNTS_API: 'https://preview.example.invalid'
+        run: npm run build
