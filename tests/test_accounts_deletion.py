@@ -26,3 +26,20 @@ class DeletionTests(unittest.TestCase):
             with connection() as conn:
                 conn.execute("DELETE FROM subscriptions WHERE provider_id=%s",(pid,))
                 conn.execute("DELETE FROM accounts WHERE id=%s",(aid,))
+
+    def test_rejected_request_can_be_resubmitted(self):
+        password="test-password-123"
+        aid=register(str(uuid.uuid4())+"@example.test",password)
+        try:
+            with connection() as conn:
+                conn.execute("UPDATE accounts SET email_verified_at=now() WHERE id=%s",(aid,))
+            first=request_deletion(aid,password)
+            with connection() as conn:
+                conn.execute("UPDATE account_deletion_requests SET status='rejected',reviewed_at=now() WHERE id=%s",(first["request_id"],))
+            second=request_deletion(aid,password)
+            self.assertNotEqual(first["request_id"],second["request_id"])
+            self.assertEqual(second["status"],"pending_review")
+            self.assertEqual(request_deletion(aid,password),second)
+        finally:
+            with connection() as conn:
+                conn.execute("DELETE FROM accounts WHERE id=%s",(aid,))
