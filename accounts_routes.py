@@ -152,4 +152,13 @@ def build_router(valid_station_ids):
         except ValueError:
             raise HTTPException(400,"Invalid deletion request")
 
+    @router.post("/me/sessions/revoke-all")
+    def revoke_sessions(body: DeletionRequest, request: Request, account_id=Depends(identity)):
+        throttle("login_ip",client_key(request))
+        throttle("login_email",str(account_id))
+        try:
+            return {"revoked":store.revoke_all_sessions(account_id,body.password)}
+        except PermissionError:
+            raise HTTPException(403,"Reauthentication failed")
+
     return router
