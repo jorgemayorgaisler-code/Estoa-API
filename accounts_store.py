@@ -71,3 +71,4 @@ def change_password(account_id,current_password,new_password):
             raise PermissionError("Reauthentication failed")
         conn.execute("UPDATE accounts SET password_hash=%s WHERE id=%s",(encoded,account_id))
         conn.execute("UPDATE account_sessions SET revoked_at=now() WHERE account_id=%s AND revoked_at IS NULL",(account_id,))
+        conn.execute("UPDATE password_reset_tokens SET consumed_at=now() WHERE account_id=%s AND consumed_at IS NULL",(account_id,))
