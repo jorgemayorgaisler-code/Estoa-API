@@ -14,6 +14,7 @@ def request_deletion(account_id,password):
         if existing:
             return {"request_id":str(existing["id"]),"status":existing["status"]}
         subscriptions=conn.execute("SELECT count(*) AS n FROM subscriptions WHERE account_id=%s AND status IN ('pending','authorized','paused')",(account_id,)).fetchone()["n"]
-        status="billing_review" if subscriptions else "pending_review"
+        reservation=conn.execute("SELECT request_id FROM checkout_reservations WHERE account_id=%s AND status IN ('reserved','review_required')",(account_id,)).fetchone()
+        status="billing_review" if subscriptions or reservation else "pending_review"
         conn.execute("INSERT INTO account_deletion_requests(id,account_id,status) VALUES (%s,%s,%s)",(request_id,account_id,status))
         return {"request_id":str(request_id),"status":status}
