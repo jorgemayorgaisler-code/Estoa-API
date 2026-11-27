@@ -17,7 +17,7 @@ export default function AccountPrivacy({apiBase,token,onExpired}){
   return ()=>pending.current?.abort();
  },[apiBase,token]);
  async function submit(e){
-  e.preventDefault();if(busy||!consent||!status||status.request)return;
+  e.preventDefault();if(busy||!consent||!status||(status.request&&status.request.status!=="rejected"))return;
   const c=new AbortController();pending.current=c;setBusy(true);setMessage("");
   try{const data=await request("POST",{password},c.signal);if(!c.signal.aborted)setStatus({request:data});}
   catch(e){if(!c.signal.aborted)setMessage(e.message)}
@@ -26,7 +26,8 @@ export default function AccountPrivacy({apiBase,token,onExpired}){
  const labels={pending_review:"Pendiente de revisión",billing_review:"Revisión de suscripción y pagos",completed:"Completada",rejected:"Rechazada"};
  return <article><h3>Privacidad y eliminación de cuenta</h3>
  <p>La solicitud no cancela automáticamente los cobros ni elimina inmediatamente tus datos.</p>
- {status?.request?<p>Estado: {labels[status.request.status]||"En revisión"}</p>:status&&<form onSubmit={submit}>
+ {status?.request&&<p>Estado: {labels[status.request.status]||"En revisión"}</p>}
+ {status&&(!status.request||status.request.status==="rejected")&&<form onSubmit={submit}>
  <label>Contraseña actual<input type="password" autoComplete="current-password" required minLength={12} maxLength={128} value={password} onChange={e=>setPassword(e.target.value)}/></label>
  <label><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/>Confirmo que deseo solicitar la eliminación de mi cuenta.</label>
  <button disabled={busy||!consent}>Enviar solicitud</button></form>}
