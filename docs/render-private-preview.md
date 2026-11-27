@@ -1,0 +1,4 @@
+# Render private preview
+Use a separate service from the feature/accounts-foundation branch, with start command uvicorn accounts_preview:app --host 0.0.0.0 --port $PORT and health path /health. Build with pip install -r requirements.txt. Configure a dedicated test PostgreSQL database, apply migrations in order, set ESTOA_DATABASE_URL and ESTOA_RATE_LIMIT_SECRET as secrets. Never reuse production database.
+Frontend preview requires explicit VITE_ACCOUNTS_PREVIEW=true and VITE_ACCOUNTS_API pointing to the isolated HTTPS origin. Configure exact-origin CORS before testing; keep email and payment flags off until respective sandbox configuration is validated.
+Do not provision paid services or enable real charges without approval. Verify service worker cache exclusion, logout, expiry, mobile display, and no public fallback. Existing public API is not changed by this preview; commercial enforcement requires a separate migration plan.

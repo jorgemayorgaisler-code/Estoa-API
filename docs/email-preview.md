@@ -1,0 +1,3 @@
+# Email preview
+Set ESTOA_EMAIL_PREVIEW=true only after configuring ESTOA_SMTP_HOST, ESTOA_SMTP_PORT, ESTOA_SMTP_FROM, ESTOA_SMTP_USER, ESTOA_SMTP_PASSWORD and the existing rate-limit secret. Use a verified sender and test mailbox. Never commit secrets.
+Registration currently requires a separate verification/request call. Frontend must implement request and confirmation forms. Codes expire after 30 minutes. Generic responses intentionally avoid disclosing account existence. Delivery failures currently return generic acceptance; add sanitized operational metrics and retry policy before launch. Validate proxy IP handling and shared verification/reset throttles. No real email delivery has been tested.

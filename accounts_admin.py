@@ -1,0 +1,26 @@
+from accounts_store import connection
+
+def admin_summary(account_id):
+    with connection() as conn:
+        row=conn.execute("""SELECT a.id FROM accounts a JOIN account_admin_grants g ON g.account_id=a.id
+            WHERE a.id=%s AND a.disabled_at IS NULL AND a.email_verified_at IS NOT NULL AND g.revoked_at IS NULL
+            FOR SHARE OF a,g""",(account_id,)).fetchone()
+        if not row:
+            raise PermissionError("Administrative access required")
+        conn.execute("INSERT INTO admin_access_audit(account_id,action) VALUES (%s,'summary_read')",(account_id,))
+        return conn.execute("""SELECT
+            (SELECT count(*) FROM accounts WHERE email_verified_at IS NOT NULL AND disabled_at IS NULL) AS verified_accounts,
+            (SELECT count(*) FROM premium_trials t JOIN accounts a ON a.id=t.account_id WHERE t.activated_at<=now() AND t.expires_at>now() AND a.disabled_at IS NULL AND a.email_verified_at IS NOT NULL) AS active_trials,
+            (SELECT count(DISTINCT s.account_id) FROM subscriptions s JOIN accounts a ON a.id=s.account_id WHERE s.status='authorized' AND s.access_until>now() AND a.disabled_at IS NULL AND a.email_verified_at IS NOT NULL) AS paid_accounts,
+            (SELECT COALESCE(sum(amount_clp),0) FROM subscription_payments WHERE status='approved') AS approved_ledger_clp,
+            (SELECT count(*) FROM payment_webhook_inbox WHERE state='review') AS review_notifications,
+            (SELECT count(*) FROM account_deletion_requests WHERE status='pending_review') AS pending_deletions,
+            (SELECT count(*) FROM account_deletion_requests WHERE status='billing_review') AS billing_deletions,
+            (SELECT count(DISTINCT s.account_id) FROM subscriptions s JOIN accounts a ON a.id=s.account_id WHERE s.status='authorized' AND s.access_until>now() AND s.access_until<=now()+interval '7 days' AND a.disabled_at IS NULL AND a.email_verified_at IS NOT NULL) AS expiring_paid_accounts,
+            (SELECT count(DISTINCT s.account_id) FROM subscriptions s JOIN premium_trials t ON t.account_id=s.account_id JOIN accounts a ON a.id=s.account_id WHERE s.status='authorized' AND s.access_until>now() AND a.disabled_at IS NULL AND a.email_verified_at IS NOT NULL) AS trial_paid_accounts,
+            (SELECT COALESCE(sum(amount_clp),0) FROM subscription_payments WHERE status='approved' AND date_trunc('month',period_start AT TIME ZONE 'America/Santiago')=date_trunc('month',now() AT TIME ZONE 'America/Santiago')) AS current_period_approved_clp,
+            (SELECT COALESCE(sum(amount_clp),0) FROM subscription_payments WHERE status='refunded') AS refunded_ledger_clp,
+            (SELECT COALESCE(sum(amount_clp),0) FROM subscription_payments WHERE status='charged_back') AS charged_back_ledger_clp,
+            (SELECT count(*) FROM accounts WHERE email_verified_at>=date_trunc('month',now() AT TIME ZONE 'America/Santiago') AT TIME ZONE 'America/Santiago' AND disabled_at IS NULL) AS newly_verified_month,
+            (SELECT count(*) FROM premium_trials WHERE activated_at>=date_trunc('month',now() AT TIME ZONE 'America/Santiago') AT TIME ZONE 'America/Santiago' AND activated_at<=now()) AS trials_started_month,
+            (SELECT count(*) FROM premium_trials WHERE expires_at<=now()) AS completed_trials""").fetchone()

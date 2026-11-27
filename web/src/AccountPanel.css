@@ -1,0 +1,8 @@
+.estoa-account{max-width:32rem;margin:1rem auto;padding:1rem;display:grid;gap:1rem;color:inherit}
+.estoa-account form,.estoa-account label,.estoa-premium{display:grid;gap:.75rem}
+.estoa-account input,.estoa-account select,.estoa-account button{box-sizing:border-box;width:100%;min-height:44px;padding:.65rem;border:1px solid #64748b;border-radius:.5rem;font:inherit}
+.estoa-account button{background:#075985;color:white;cursor:pointer}
+.estoa-account button:disabled{opacity:.55;cursor:default}
+.estoa-premium{border:1px solid #64748b;border-radius:.75rem;padding:1rem}
+.estoa-premium strong{font-size:1.5rem}
+.estoa-account :focus-visible{outline:3px solid #38bdf8;outline-offset:2px}
