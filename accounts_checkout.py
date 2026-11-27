@@ -7,6 +7,9 @@ def reserve_checkout(account_id):
         account=conn.execute("SELECT id,email FROM accounts WHERE id=%s AND email_verified_at IS NOT NULL AND disabled_at IS NULL FOR UPDATE",(account_id,)).fetchone()
         if not account:
             raise PermissionError("Account unavailable")
+        deletion=conn.execute("SELECT id FROM account_deletion_requests WHERE account_id=%s AND status IN ('pending_review','billing_review')",(account_id,)).fetchone()
+        if deletion:
+            raise PermissionError("Account deletion pending")
         existing=conn.execute("SELECT provider_id FROM subscriptions WHERE account_id=%s AND status IN ('pending','authorized','paused')",(account_id,)).fetchone()
         if existing:
             raise PermissionError("Existing subscription")
