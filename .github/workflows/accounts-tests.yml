@@ -32,11 +32,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements.txt httpx
-      - run: |
-          python - <<'PY'
-          import os, pathlib, psycopg
-          for path in sorted(pathlib.Path("migrations").glob("*.sql")):
-              with psycopg.connect(os.environ["ESTOA_DATABASE_URL"], autocommit=True) as conn:
-                  conn.execute(path.read_text())
-          PY
+      - run: python -c 'from accounts_migrate import migrate; print(migrate())'
+        env:
+          ESTOA_MIGRATION_PREVIEW: "true"
       - run: python -m unittest discover -s tests -p 'test_accounts*.py' -v
