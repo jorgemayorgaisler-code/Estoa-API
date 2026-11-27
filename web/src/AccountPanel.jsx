@@ -3,6 +3,7 @@ import "./AccountPanel.css";
 import EmailPanel from "./EmailPanel.jsx";
 import AccountSecurity from "./AccountSecurity.jsx";
 import AccountPrivacy from "./AccountPrivacy.jsx";
+import AccountTerms from "./AccountTerms.jsx";
 
 export default function AccountPanel({apiBase, stations=[], sessionToken, onSessionChange}) {
   const [mode,setMode]=useState("login");
@@ -71,6 +72,7 @@ export default function AccountPanel({apiBase, stations=[], sessionToken, onSess
     </article>
     {token&&import.meta.env.VITE_COMMERCIAL_PREVIEW==="true"&&<AccountSecurity key={token} apiBase={apiBase} token={token} onSignedOut={()=>{setToken("");setStatus(null);setTrial(null);setConsent(false);setMessage("Inicia sesión nuevamente.")}}/>}
     {token&&import.meta.env.VITE_COMMERCIAL_PREVIEW==="true"&&import.meta.env.VITE_DELETION_PREVIEW==="true"&&<AccountPrivacy key={token} apiBase={apiBase} token={token} onExpired={()=>{setToken("");setStatus(null)}}/>}
+    {token&&import.meta.env.VITE_COMMERCIAL_PREVIEW==="true"&&import.meta.env.VITE_TERMS_PREVIEW==="true"&&<AccountTerms key={token} apiBase={apiBase} token={token} onExpired={()=>{setToken("");setStatus(null)}}/>}
     <p role="status" aria-live="polite">{message}</p>
   </section>
 }
