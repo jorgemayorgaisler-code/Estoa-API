@@ -24,3 +24,15 @@ class TermsContentTests(unittest.TestCase):
         with patch.dict("os.environ",{"ESTOA_TERMS_DOCUMENT_PATH":""}):
             with self.assertRaises(ValueError):
                 verified_content({"content_sha256":"a"*64})
+
+    def test_oversized_document(self):
+        self.assert_rejected_bytes(b"a"*262145)
+    def test_invalid_utf8(self):
+        self.assert_rejected_bytes(b"\xff\xfe")
+    def assert_rejected_bytes(self,raw):
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/"terms.txt"
+            path.write_bytes(raw)
+            with patch.dict("os.environ",{"ESTOA_TERMS_DOCUMENT_PATH":str(path)}):
+                with self.assertRaises(ValueError):
+                    verified_content({"content_sha256":hashlib.sha256(raw).hexdigest()})
