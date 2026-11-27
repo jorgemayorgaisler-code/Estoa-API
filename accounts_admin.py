@@ -15,4 +15,6 @@ def admin_summary(account_id):
             (SELECT COALESCE(sum(amount_clp),0) FROM subscription_payments WHERE status='approved') AS approved_ledger_clp,
             (SELECT count(*) FROM payment_webhook_inbox WHERE state='review') AS review_notifications,
             (SELECT count(*) FROM account_deletion_requests WHERE status='pending_review') AS pending_deletions,
-            (SELECT count(*) FROM account_deletion_requests WHERE status='billing_review') AS billing_deletions""").fetchone()
+            (SELECT count(*) FROM account_deletion_requests WHERE status='billing_review') AS billing_deletions,
+            (SELECT count(DISTINCT s.account_id) FROM subscriptions s JOIN accounts a ON a.id=s.account_id WHERE s.status='authorized' AND s.access_until>now() AND s.access_until<=now()+interval '7 days' AND a.disabled_at IS NULL AND a.email_verified_at IS NOT NULL) AS expiring_paid_accounts,
+            (SELECT count(DISTINCT s.account_id) FROM subscriptions s JOIN premium_trials t ON t.account_id=s.account_id JOIN accounts a ON a.id=s.account_id WHERE s.status='authorized' AND s.access_until>now() AND a.disabled_at IS NULL AND a.email_verified_at IS NOT NULL) AS trial_paid_accounts""").fetchone()
